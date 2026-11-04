@@ -2,15 +2,17 @@ package br.com.hippo.domain.usecase
 
 import br.com.hippo.domain.model.Task
 import br.com.hippo.domain.model.TaskPriority
+import br.com.hippo.domain.model.TaskReminder
 import br.com.hippo.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlin.uuid.Uuid
 
 /**
- * Observa as tarefas já ordenadas: pendentes primeiro, depois pela prioridade
- * e, por fim, pela data de vencimento mais próxima. É o ponto de partida para o
+ * Observa as tarefas já ordenadas: pendentes primeiro, depois pela data/hora mais
+ * próxima e, no mesmo horário, pela prioridade. É o ponto de partida para o
  * "algoritmo de priorização automática" previsto no projeto.
  */
 class ObserveTasksUseCase(private val repository: TaskRepository) {
@@ -20,30 +22,52 @@ class ObserveTasksUseCase(private val repository: TaskRepository) {
     companion object {
         val taskComparator: Comparator<Task> =
             compareBy<Task> { it.isDone }
+                .thenBy(nullsLast()) { it.dueDate }
+                .thenBy(nullsLast()) { it.dueTime }
                 .thenByDescending { it.priority.weight }
-                .thenBy(nullsLast()) { it.dueAt }
     }
 }
 
-class AddTaskUseCase(private val repository: TaskRepository) {
-    suspend operator fun invoke(
-        title: String,
-        description: String = "",
-        priority: TaskPriority = TaskPriority.MEDIUM,
-        dueAt: LocalDateTime? = null,
-    ): Result<Task> {
-        val cleanTitle = title.trim()
-        if (cleanTitle.isEmpty()) {
-            return Result.failure(IllegalArgumentException("O título da tarefa é obrigatório"))
+class GetTaskUseCase(private val repository: TaskRepository) {
+    suspend operator fun invoke(id: String): Task? = repository.getTask(id)
+}
+
+/** Dados que o usuário preenche ao criar ou editar uma tarefa. */
+data class TaskInput(
+    val title: String,
+    val description: String = "",
+    val priority: TaskPriority = TaskPriority.MEDIUM,
+    val dueDate: LocalDate? = null,
+    val dueTime: LocalTime? = null,
+    val reminder: TaskReminder = TaskReminder.NONE,
+)
+
+class TaskValidationException(message: String) : IllegalArgumentException(message)
+
+/** Cria a tarefa quando [existing] é nulo; caso contrário, atualiza a existente. */
+class SaveTaskUseCase(private val repository: TaskRepository) {
+    suspend operator fun invoke(input: TaskInput, existing: Task? = null): Result<Task> {
+        val title = input.title.trim()
+        if (title.isEmpty()) {
+            return Result.failure(TaskValidationException("O título da tarefa é obrigatório"))
+        }
+        if (input.dueTime != null && input.dueDate == null) {
+            return Result.failure(TaskValidationException("Escolha uma data para o horário"))
         }
         val task = Task(
-            id = Uuid.random().toString(),
-            title = cleanTitle,
-            description = description.trim(),
-            priority = priority,
-            dueAt = dueAt,
+            id = existing?.id ?: Uuid.random().toString(),
+            title = title,
+            description = input.description.trim(),
+            priority = input.priority,
+            dueDate = input.dueDate,
+            dueTime = input.dueTime,
+            // Sem horário não há como calcular quando o lembrete deve tocar.
+            reminder = if (input.dueTime == null) TaskReminder.NONE else input.reminder,
+            isDone = existing?.isDone ?: false,
         )
-        return runCatching { repository.addTask(task) }.map { task }
+        return runCatching {
+            if (existing == null) repository.addTask(task) else repository.updateTask(task)
+        }.map { task }
     }
 }
 

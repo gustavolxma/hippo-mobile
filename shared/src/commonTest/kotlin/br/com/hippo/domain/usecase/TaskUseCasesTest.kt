@@ -3,49 +3,86 @@ package br.com.hippo.domain.usecase
 import br.com.hippo.data.repository.InMemoryTaskRepository
 import br.com.hippo.domain.model.Task
 import br.com.hippo.domain.model.TaskPriority
+import br.com.hippo.domain.model.TaskReminder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class TaskUseCasesTest {
 
+    private val today = LocalDate(2026, 10, 28)
+
     @Test
-    fun `ordena pendentes primeiro e depois por prioridade e vencimento`() = runTest {
+    fun `ordena pendentes primeiro e depois por data hora e prioridade`() = runTest {
         val repository = InMemoryTaskRepository(
             listOf(
-                Task(id = "done", title = "Feita", priority = TaskPriority.URGENT, isDone = true),
-                Task(id = "low", title = "Baixa", priority = TaskPriority.LOW),
-                Task(id = "high-late", title = "Alta tarde", priority = TaskPriority.HIGH, dueAt = LocalDateTime(2026, 12, 1, 10, 0)),
-                Task(id = "high-soon", title = "Alta cedo", priority = TaskPriority.HIGH, dueAt = LocalDateTime(2026, 11, 1, 10, 0)),
+                Task(id = "done", title = "Feita", priority = TaskPriority.HIGH, dueDate = today, isDone = true),
+                Task(id = "no-date", title = "Sem data", priority = TaskPriority.HIGH),
+                Task(id = "late", title = "Tarde", dueDate = today, dueTime = LocalTime(18, 0)),
+                Task(id = "early-low", title = "Cedo baixa", priority = TaskPriority.LOW, dueDate = today, dueTime = LocalTime(9, 0)),
+                Task(id = "early-high", title = "Cedo alta", priority = TaskPriority.HIGH, dueDate = today, dueTime = LocalTime(9, 0)),
             )
         )
 
         val ids = ObserveTasksUseCase(repository)().first().map { it.id }
 
-        assertEquals(listOf("high-soon", "high-late", "low", "done"), ids)
+        assertEquals(listOf("early-high", "early-low", "late", "no-date", "done"), ids)
     }
 
     @Test
-    fun `nao adiciona tarefa com titulo vazio`() = runTest {
-        val repository = InMemoryTaskRepository(emptyList())
+    fun `nao salva tarefa com titulo vazio`() = runTest {
+        val repository = InMemoryTaskRepository()
 
-        val result = AddTaskUseCase(repository)(title = "   ")
+        val result = SaveTaskUseCase(repository)(TaskInput(title = "   "))
 
-        assertTrue(result.isFailure)
+        assertIs<TaskValidationException>(result.exceptionOrNull())
         assertTrue(repository.observeTasks().first().isEmpty())
     }
 
     @Test
-    fun `adiciona tarefa com titulo sem espacos extras`() = runTest {
-        val repository = InMemoryTaskRepository(emptyList())
+    fun `exige data quando ha horario`() = runTest {
+        val result = SaveTaskUseCase(InMemoryTaskRepository())(
+            TaskInput(title = "Reunião", dueTime = LocalTime(10, 0)),
+        )
 
-        AddTaskUseCase(repository)(title = "  Estudar KMP  ", priority = TaskPriority.HIGH)
+        assertIs<TaskValidationException>(result.exceptionOrNull())
+    }
+
+    @Test
+    fun `remove lembrete quando nao ha horario`() = runTest {
+        val saved = SaveTaskUseCase(InMemoryTaskRepository())(
+            TaskInput(title = "Estudar", dueDate = today, reminder = TaskReminder.MINUTES_30),
+        ).getOrThrow()
+
+        assertEquals(TaskReminder.NONE, saved.reminder)
+    }
+
+    @Test
+    fun `cria tarefa nova com titulo sem espacos extras`() = runTest {
+        val repository = InMemoryTaskRepository()
+
+        SaveTaskUseCase(repository)(TaskInput(title = "  Estudar KMP  ", priority = TaskPriority.HIGH))
 
         val saved = repository.observeTasks().first().single()
         assertEquals("Estudar KMP", saved.title)
         assertEquals(TaskPriority.HIGH, saved.priority)
+    }
+
+    @Test
+    fun `edita tarefa existente mantendo id e status`() = runTest {
+        val existing = Task(id = "1", title = "Antigo", isDone = true)
+        val repository = InMemoryTaskRepository(listOf(existing))
+
+        SaveTaskUseCase(repository)(TaskInput(title = "Novo"), existing = existing)
+
+        val saved = repository.observeTasks().first().single()
+        assertEquals("1", saved.id)
+        assertEquals("Novo", saved.title)
+        assertTrue(saved.isDone)
     }
 }
