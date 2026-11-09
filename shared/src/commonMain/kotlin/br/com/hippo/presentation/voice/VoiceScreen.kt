@@ -41,12 +41,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.com.hippo.domain.model.TaskReminder
 import br.com.hippo.domain.usecase.TaskInput
 import br.com.hippo.presentation.components.HippoPrimaryButton
 import br.com.hippo.presentation.components.HippoSecondaryButton
 import br.com.hippo.presentation.components.HippoTextLink
 import br.com.hippo.presentation.components.describeWhen
 import br.com.hippo.presentation.components.label
+import br.com.hippo.presentation.components.rememberNotificationPermissionRequest
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.theme.HippoShapes
 import br.com.hippo.presentation.theme.HippoTheme
@@ -70,6 +72,7 @@ fun VoiceRoute(
     val requestPermission = rememberMicrophonePermissionRequest { granted ->
         viewModel.onIntent(VoiceIntent.PermissionResult(granted))
     }
+    val requestNotificationPermission = rememberNotificationPermissionRequest()
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -85,7 +88,13 @@ fun VoiceRoute(
     }
 
     Box(Modifier.fillMaxSize()) {
-        VoiceScreen(state, viewModel::onIntent)
+        VoiceScreen(state) { intent ->
+            // "Me lembra de..." com horário cria um lembrete: hora de pedir a permissão.
+            if (intent == VoiceIntent.Confirm && state.task?.reminder?.let { it != TaskReminder.NONE } == true) {
+                requestNotificationPermission()
+            }
+            viewModel.onIntent(intent)
+        }
         SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
     }
 }

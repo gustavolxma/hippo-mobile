@@ -8,6 +8,7 @@ import br.com.hippo.data.repository.FakeAuthRepository
 import br.com.hippo.data.repository.InMemoryTaskRepository
 import br.com.hippo.data.repository.RemoteTaskRepository
 import br.com.hippo.data.voice.LocalCommandInterpreter
+import br.com.hippo.domain.reminder.TaskReminderSync
 import br.com.hippo.domain.repository.AuthRepository
 import br.com.hippo.domain.repository.PreferencesRepository
 import br.com.hippo.domain.repository.TaskRepository
@@ -81,6 +82,8 @@ val dataModule = module {
     // Interpretação local por regras. Quando a API tiver a IA, troque por uma
     // implementação que envia o texto ao backend (a tela de Voz não muda).
     single<CommandInterpreter> { LocalCommandInterpreter() }
+    // O ReminderScheduler vem do platformModule (Android/iOS).
+    single { TaskReminderSync(scheduler = get(), clock = get()) }
 }
 
 /** No modo sem API, as telas de código mostram o código fixo aceito, para facilitar os testes. */

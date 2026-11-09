@@ -4,6 +4,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- Lembretes: mostrar notificações (Android 13+) e tocar no horário exato. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
     <!-- Android 11+: permite encontrar o serviço de reconhecimento de fala do aparelho. -->
     <queries>
         <intent>
@@ -29,6 +36,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Mostra a notificação quando o alarme de um lembrete toca. -->
+        <receiver
+            android:name="br.com.hippo.data.reminder.ReminderReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

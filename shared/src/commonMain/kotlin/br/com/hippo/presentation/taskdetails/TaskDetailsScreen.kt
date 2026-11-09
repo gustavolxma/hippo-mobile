@@ -48,6 +48,7 @@ import br.com.hippo.presentation.components.HippoTextField
 import br.com.hippo.presentation.components.HippoTopBar
 import br.com.hippo.presentation.components.PrioritySelector
 import br.com.hippo.presentation.components.formatted
+import br.com.hippo.presentation.components.rememberNotificationPermissionRequest
 import br.com.hippo.presentation.components.label
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.theme.HippoShapes
@@ -223,6 +224,7 @@ fun TaskDetailsScreen(state: TaskDetailsState, onIntent: (TaskDetailsIntent) -> 
 @Composable
 private fun ReminderRow(reminder: TaskReminder, enabled: Boolean, onSelect: (TaskReminder) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
+    val requestNotificationPermission = rememberNotificationPermissionRequest()
     Box {
         HippoPickerField(
             label = "Lembrete",
@@ -238,6 +240,7 @@ private fun ReminderRow(reminder: TaskReminder, enabled: Boolean, onSelect: (Tas
                     onClick = {
                         expanded = false
                         onSelect(option)
+                        if (option != TaskReminder.NONE) requestNotificationPermission()
                     },
                 )
             }
