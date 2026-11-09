@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,6 +27,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.hippo.presentation.theme.HippoColors
@@ -52,6 +57,11 @@ fun HippoTextField(
     singleLine: Boolean = true,
     minLines: Int = 1,
     error: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    /** Esconde o texto digitado (campos de senha). */
+    isPassword: Boolean = false,
+    enabled: Boolean = true,
 ) {
     var focused by remember { mutableStateOf(false) }
 
@@ -80,6 +90,10 @@ fun HippoTextField(
             },
             singleLine = singleLine,
             minLines = minLines,
+            enabled = enabled,
+            keyboardOptions = if (isPassword) keyboardOptions.copy(keyboardType = KeyboardType.Password) else keyboardOptions,
+            keyboardActions = keyboardActions,
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
             textStyle = HippoTheme.type.body.copy(color = HippoColors.OnBackground),
             cursorBrush = SolidColor(HippoColors.Accent),
             modifier = Modifier

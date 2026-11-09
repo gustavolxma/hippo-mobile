@@ -38,7 +38,7 @@ import org.jetbrains.compose.resources.painterResource
 
 /** Cabeçalho das telas internas: botão voltar + título grande. */
 @Composable
-fun HippoTopBar(title: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun HippoTopBar(title: String?, onBack: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -54,11 +54,13 @@ fun HippoTopBar(title: String, onBack: () -> Unit, modifier: Modifier = Modifier
                 tint = HippoColors.OnBackground,
             )
         }
-        Text(
-            text = title,
-            style = HippoTheme.type.title.copy(fontSize = 24.sp),
-            modifier = Modifier.semantics { heading() },
-        )
+        if (title != null) {
+            Text(
+                text = title,
+                style = HippoTheme.type.title.copy(fontSize = 24.sp),
+                modifier = Modifier.semantics { heading() },
+            )
+        }
     }
 }
 

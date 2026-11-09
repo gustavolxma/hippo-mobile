@@ -6,6 +6,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -107,5 +108,26 @@ private fun FilledHippoButton(
         modifier = modifier.heightIn(min = ButtonMinHeight),
     ) {
         Text(text, style = HippoTheme.type.body.copy(fontWeight = FontWeight.Black))
+    }
+}
+
+/** Ação em forma de texto lima, como "Esqueci minha senha" e "Entrar". */
+@Composable
+fun HippoTextLink(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    TextButton(
+        onClick = onClick,
+        enabled = enabled,
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = HippoColors.Accent,
+            disabledContentColor = HippoColors.OnMuted,
+        ),
+        modifier = modifier.heightIn(min = 44.dp),
+    ) {
+        Text(text, style = HippoTheme.type.caption.copy(fontSize = 14.sp))
     }
 }
