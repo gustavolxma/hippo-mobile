@@ -72,7 +72,7 @@ fun HomeScreen(state: HomeState, onIntent: (HomeIntent) -> Unit) {
         when {
             state.isLoading -> item(key = "loading") {
                 Box(Modifier.fillMaxSize().padding(top = 48.dp), Alignment.Center) {
-                    CircularProgressIndicator(color = HippoColors.Accent)
+                    CircularProgressIndicator(color = HippoColors.AccentText)
                 }
             }
 

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.theme.HippoTheme
+import br.com.hippo.presentation.theme.hippoCard
 import hippo.shared.generated.resources.Res
 import hippo.shared.generated.resources.ic_back
 import org.jetbrains.compose.resources.DrawableResource
@@ -46,7 +47,7 @@ fun HippoTopBar(title: String?, onBack: () -> Unit, modifier: Modifier = Modifie
     ) {
         IconButton(
             onClick = onBack,
-            modifier = Modifier.size(44.dp).background(HippoColors.Surface, CircleShape),
+            modifier = Modifier.size(44.dp).hippoCard(CircleShape),
         ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_back),
@@ -96,7 +97,7 @@ fun HippoBottomBar(
     ) {
         items.forEachIndexed { index, item ->
             val selected = index == selectedIndex
-            val color = if (selected) HippoColors.Accent else HippoColors.OnMuted
+            val color = if (selected) HippoColors.AccentText else HippoColors.OnMuted
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier

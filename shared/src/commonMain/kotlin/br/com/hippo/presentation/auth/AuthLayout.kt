@@ -22,9 +22,12 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import br.com.hippo.presentation.components.HippoTextLink
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.theme.HippoShapes
 import br.com.hippo.presentation.theme.HippoTheme
+import br.com.hippo.presentation.theme.hippoCard
 
 /** Estrutura comum das telas de autenticação: rolagem, margens e espaço do teclado. */
 @Composable
@@ -56,7 +59,7 @@ internal fun FormCard(content: @Composable ColumnScope.() -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .background(HippoColors.Surface, HippoShapes.Large)
+            .hippoCard(HippoShapes.Large)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         content = content,
     )
@@ -72,4 +75,18 @@ internal fun FormErrorText(message: String?) {
         color = HippoColors.Danger,
         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
     )
+}
+
+/** "Reenviar código em 0:45" durante a espera; depois, o link "Reenviar código". */
+@Composable
+internal fun ResendCode(secondsLeft: Int, onResend: () -> Unit) {
+    if (secondsLeft > 0) {
+        Text(
+            "Reenviar código em ${formatCountdown(secondsLeft)}",
+            style = HippoTheme.type.body.copy(fontSize = 14.sp),
+            color = HippoColors.OnMuted,
+        )
+    } else {
+        HippoTextLink("Reenviar código", onClick = onResend)
+    }
 }

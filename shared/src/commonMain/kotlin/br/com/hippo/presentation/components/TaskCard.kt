@@ -28,6 +28,7 @@ import br.com.hippo.domain.model.Task
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.theme.HippoShapes
 import br.com.hippo.presentation.theme.HippoTheme
+import br.com.hippo.presentation.theme.hippoCard
 import hippo.shared.generated.resources.Res
 import hippo.shared.generated.resources.ic_check
 import org.jetbrains.compose.resources.painterResource
@@ -47,7 +48,7 @@ fun TaskCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(HippoShapes.Large)
-            .background(HippoColors.Surface)
+            .hippoCard(HippoShapes.Large)
             .clickable(onClickLabel = "Abrir detalhes", onClick = onClick)
             .padding(start = 8.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
     ) {
@@ -97,7 +98,7 @@ private fun DoneCheck(checked: Boolean, onToggle: () -> Unit) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_check),
                     contentDescription = "Concluída",
-                    tint = HippoColors.Background,
+                    tint = HippoColors.OnAccent,
                     modifier = Modifier.size(18.dp),
                 )
             }

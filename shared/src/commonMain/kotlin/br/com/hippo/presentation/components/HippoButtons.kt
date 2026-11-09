@@ -27,7 +27,7 @@ fun HippoPrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    FilledHippoButton(text, onClick, modifier, enabled, container = HippoColors.Accent)
+    FilledHippoButton(text, onClick, modifier, enabled, container = HippoColors.Accent, content = HippoColors.OnAccent)
 }
 
 /** Botão para ações destrutivas, como excluir (vermelho claro). */
@@ -38,7 +38,7 @@ fun HippoDestructiveButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    FilledHippoButton(text, onClick, modifier, enabled, container = HippoColors.Danger)
+    FilledHippoButton(text, onClick, modifier, enabled, container = HippoColors.Danger, content = HippoColors.OnDanger)
 }
 
 /** Botão secundário com contorno violeta. */
@@ -94,6 +94,7 @@ private fun FilledHippoButton(
     modifier: Modifier,
     enabled: Boolean,
     container: Color,
+    content: Color,
 ) {
     Button(
         onClick = onClick,
@@ -101,7 +102,7 @@ private fun FilledHippoButton(
         shape = HippoShapes.Medium,
         colors = ButtonDefaults.buttonColors(
             containerColor = container,
-            contentColor = HippoColors.Background,
+            contentColor = content,
             disabledContainerColor = HippoColors.Track,
             disabledContentColor = HippoColors.OnMuted,
         ),
@@ -123,7 +124,7 @@ fun HippoTextLink(
         onClick = onClick,
         enabled = enabled,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = HippoColors.Accent,
+            contentColor = HippoColors.AccentText,
             disabledContentColor = HippoColors.OnMuted,
         ),
         modifier = modifier.heightIn(min = 44.dp),

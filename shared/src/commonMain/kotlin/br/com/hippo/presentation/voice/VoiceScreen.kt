@@ -22,6 +22,7 @@ import br.com.hippo.presentation.components.HippoSecondaryButton
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.theme.HippoShapes
 import br.com.hippo.presentation.theme.HippoTheme
+import br.com.hippo.presentation.theme.hippoCard
 import hippo.shared.generated.resources.Res
 import hippo.shared.generated.resources.ic_mic
 import org.jetbrains.compose.resources.painterResource
@@ -53,7 +54,7 @@ fun VoiceScreen(onCreateManually: () -> Unit) {
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(HippoColors.Surface, HippoShapes.Large)
+                .hippoCard(HippoShapes.Large)
                 .padding(horizontal = 16.dp, vertical = 14.dp),
         )
         HippoSecondaryButton("Criar tarefa manualmente", onClick = onCreateManually, modifier = Modifier.fillMaxWidth())

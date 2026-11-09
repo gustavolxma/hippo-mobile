@@ -21,7 +21,8 @@ import androidx.navigation.toRoute
 import br.com.hippo.presentation.components.BottomBarItem
 import br.com.hippo.presentation.components.HippoBottomBar
 import br.com.hippo.presentation.home.HomeRoute
-import br.com.hippo.presentation.settings.SettingsScreen
+import br.com.hippo.presentation.settings.SettingsRoute
+import br.com.hippo.presentation.settings.changeaccount.ChangeAccountRoute
 import br.com.hippo.presentation.taskdetails.TaskDetailsRoute
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.voice.VoiceScreen
@@ -46,6 +47,9 @@ data object SettingsDestination
 @Serializable
 data class TaskDetailsDestination(val taskId: String? = null)
 
+@Serializable
+data object ChangeAccountDestination
+
 /** Abas da barra inferior, na ordem em que aparecem. */
 private enum class Tab(val destination: Any, val route: KClass<*>, val item: BottomBarItem) {
     HOME(HomeDestination, HomeDestination::class, BottomBarItem("Início", Res.drawable.ic_home)),
@@ -65,8 +69,8 @@ fun AppNavHost() {
         Box(
             Modifier
                 .weight(1f)
-                // As telas com barra inferior cuidam só da barra de status;
-                // Detalhes trata todos os recortes da tela sozinha.
+                // As telas com barra inferior cuidam só da barra de status; as demais
+                // (Detalhes, Alterar e-mail ou senha) tratam todos os recortes sozinhas.
                 .then(if (currentTab != null) Modifier.windowInsetsPadding(WindowInsets.statusBars) else Modifier),
         ) {
             NavHost(navController = navController, startDestination = HomeDestination) {
@@ -77,7 +81,10 @@ fun AppNavHost() {
                     VoiceScreen(onCreateManually = { navController.navigate(TaskDetailsDestination()) })
                 }
                 composable<SettingsDestination> {
-                    SettingsScreen()
+                    SettingsRoute(onNavigateToChangeAccount = { navController.navigate(ChangeAccountDestination) })
+                }
+                composable<ChangeAccountDestination> {
+                    ChangeAccountRoute(onNavigateBack = { navController.popBackStack() })
                 }
                 composable<TaskDetailsDestination> { entry ->
                     val args = entry.toRoute<TaskDetailsDestination>()

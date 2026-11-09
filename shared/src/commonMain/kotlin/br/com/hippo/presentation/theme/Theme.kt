@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -22,19 +23,6 @@ import hippo.shared.generated.resources.nunito_black
 import hippo.shared.generated.resources.nunito_extrabold
 import hippo.shared.generated.resources.nunito_semibold
 import org.jetbrains.compose.resources.Font
-
-/** Tokens de cor do UI Kit do protótipo. */
-object HippoColors {
-    val Background = Color(0xFF17142B)
-    val Surface = Color(0xFF241F45)
-    val Track = Color(0xFF3A3366)
-    val Primary = Color(0xFF6B46F0)
-    val Accent = Color(0xFFB6F54A)
-    val Warning = Color(0xFFFFC53D)
-    val Danger = Color(0xFFFF8A8A)
-    val OnBackground = Color(0xFFF4F2FF)
-    val OnMuted = Color(0xFFB5B0D6)
-}
 
 /** Raios do UI Kit: 12 · 14 · 20 · 24 · círculo. */
 object HippoShapes {
@@ -79,28 +67,36 @@ private fun nunitoFamily() = FontFamily(
     Font(Res.font.nunito_black, FontWeight.Black),
 )
 
+/**
+ * Cores do Material 3 derivadas da paleta do Hippo. Os componentes prontos do Material
+ * (seletores de data e hora, menus, snackbar) usam estas cores.
+ */
+private fun HippoColorScheme.toMaterial() = (if (isDark) darkColorScheme() else lightColorScheme()).copy(
+    primary = primary,
+    onPrimary = onPrimary,
+    secondary = accent,
+    onSecondary = onAccent,
+    background = background,
+    onBackground = onBackground,
+    surface = surface,
+    onSurface = onBackground,
+    surfaceVariant = track,
+    onSurfaceVariant = onMuted,
+    surfaceContainer = surface,
+    surfaceContainerHigh = surface,
+    surfaceContainerHighest = track,
+    error = danger,
+    onError = onDanger,
+    outline = track,
+)
+
+/** Tema do app. [darkTheme] vem da preferência do usuário (Claro / Escuro / Sistema). */
 @Composable
-fun HippoTheme(content: @Composable () -> Unit) {
+fun HippoTheme(darkTheme: Boolean = true, content: @Composable () -> Unit) {
     val family = nunitoFamily()
     val type = remember(family) { hippoTypography(family) }
-
-    val colors = darkColorScheme(
-        primary = HippoColors.Primary,
-        onPrimary = HippoColors.OnBackground,
-        secondary = HippoColors.Accent,
-        onSecondary = HippoColors.Background,
-        background = HippoColors.Background,
-        onBackground = HippoColors.OnBackground,
-        surface = HippoColors.Surface,
-        onSurface = HippoColors.OnBackground,
-        surfaceVariant = HippoColors.Track,
-        onSurfaceVariant = HippoColors.OnMuted,
-        surfaceContainerHigh = HippoColors.Surface,
-        surfaceContainerHighest = HippoColors.Track,
-        error = HippoColors.Danger,
-        onError = HippoColors.Background,
-        outline = HippoColors.Track,
-    )
+    val palette = if (darkTheme) DarkHippoColors else LightHippoColors
+    val colors = remember(palette) { palette.toMaterial() }
     val base = Typography()
     val typography = Typography(
         displaySmall = type.title,
@@ -117,7 +113,8 @@ fun HippoTheme(content: @Composable () -> Unit) {
 
     CompositionLocalProvider(
         LocalHippoTypography provides type,
-        LocalContentColor provides HippoColors.OnBackground,
+        LocalHippoColors provides palette,
+        LocalContentColor provides palette.onBackground,
     ) {
         MaterialTheme(
             colorScheme = colors,

@@ -1,6 +1,7 @@
 package br.com.hippo.domain.usecase
 
 import br.com.hippo.domain.model.User
+import br.com.hippo.domain.repository.AuthException
 import br.com.hippo.domain.repository.AuthRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -82,14 +83,47 @@ class RegisterUseCase(private val repository: AuthRepository) {
     }
 }
 
+internal fun validateCode(code: String): String? =
+    if (code.length != VERIFICATION_CODE_LENGTH || !code.all { it.isDigit() }) {
+        "Digite os $VERIFICATION_CODE_LENGTH dígitos do código"
+    } else null
+
 class VerifyCodeUseCase(private val repository: AuthRepository) {
-    suspend operator fun invoke(email: String, code: String): Result<User> = validated(
-        mapOf(
-            AuthField.CODE to if (code.length != VERIFICATION_CODE_LENGTH || !code.all { it.isDigit() }) {
-                "Digite os $VERIFICATION_CODE_LENGTH dígitos do código"
-            } else null,
-        ),
-    ) { repository.verifyCode(email, code) }
+    suspend operator fun invoke(email: String, code: String): Result<User> =
+        validated(mapOf(AuthField.CODE to validateCode(code))) { repository.verifyCode(email, code) }
+}
+
+class RequestAccountChangeCodeUseCase(private val repository: AuthRepository) {
+    suspend operator fun invoke(): Result<Unit> = validated(emptyMap()) { repository.requestAccountChangeCode() }
+}
+
+/**
+ * Altera e-mail e/ou senha. Campo vazio (ou e-mail igual ao atual) significa "não alterar",
+ * como diz a tela: "Preencha só o que quiser alterar".
+ */
+class UpdateAccountUseCase(private val repository: AuthRepository) {
+    suspend operator fun invoke(
+        currentEmail: String,
+        code: String,
+        newEmail: String,
+        newPassword: String,
+    ): Result<User> {
+        val cleanEmail = newEmail.trim().lowercase()
+        val emailChange = cleanEmail.takeIf { it.isNotEmpty() && it != currentEmail }
+        val passwordChange = newPassword.takeIf { it.isNotEmpty() }
+        return validated(
+            mapOf(
+                AuthField.CODE to validateCode(code),
+                AuthField.EMAIL to emailChange?.let(::validateEmail),
+                AuthField.PASSWORD to passwordChange?.let {
+                    if (it.length < MIN_PASSWORD_LENGTH) "A senha precisa ter pelo menos $MIN_PASSWORD_LENGTH caracteres" else null
+                },
+            ),
+        ) {
+            if (emailChange == null && passwordChange == null) throw AuthException.NothingToChange()
+            repository.updateAccount(code, emailChange, passwordChange)
+        }
+    }
 }
 
 class ResendCodeUseCase(private val repository: AuthRepository) {

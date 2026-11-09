@@ -7,12 +7,10 @@ import br.com.hippo.domain.usecase.ResendCodeUseCase
 import br.com.hippo.domain.usecase.VERIFICATION_CODE_LENGTH
 import br.com.hippo.domain.usecase.VerifyCodeUseCase
 import br.com.hippo.presentation.auth.AuthFormErrors
+import br.com.hippo.presentation.auth.launchCountdown
 import br.com.hippo.presentation.auth.toFormErrors
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-const val RESEND_COOLDOWN_SECONDS = 45
 
 /**
  * Ao verificar com sucesso, a sessão é aberta e a raiz do app troca para a área logada,
@@ -71,11 +69,6 @@ class VerificationViewModel(
 
     private fun startCountdown() {
         countdown?.cancel()
-        countdown = viewModelScope.launch {
-            for (seconds in RESEND_COOLDOWN_SECONDS downTo 0) {
-                setState { copy(resendSecondsLeft = seconds) }
-                if (seconds > 0) delay(1_000)
-            }
-        }
+        countdown = viewModelScope.launchCountdown { left -> setState { copy(resendSecondsLeft = left) } }
     }
 }

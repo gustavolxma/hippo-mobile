@@ -25,9 +25,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.hippo.domain.usecase.AuthField
 import br.com.hippo.presentation.auth.AuthScaffold
 import br.com.hippo.presentation.auth.FormErrorText
+import br.com.hippo.presentation.auth.ResendCode
 import br.com.hippo.presentation.components.CodeInput
 import br.com.hippo.presentation.components.HippoPrimaryButton
-import br.com.hippo.presentation.components.HippoTextLink
 import br.com.hippo.presentation.components.HippoTopBar
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.theme.HippoShapes
@@ -75,12 +75,12 @@ fun VerificationScreen(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(72.dp)
-                    .background(HippoColors.Accent.copy(alpha = 0.14f), HippoShapes.Circle),
+                    .background(HippoColors.AccentText.copy(alpha = 0.14f), HippoShapes.Circle),
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_shield),
                     contentDescription = null,
-                    tint = HippoColors.Accent,
+                    tint = HippoColors.AccentText,
                     modifier = Modifier.size(36.dp),
                 )
             }
@@ -107,16 +107,7 @@ fun VerificationScreen(
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
             FormErrorText(state.errors[AuthField.CODE] ?: state.errors.general)
-            if (state.resendSecondsLeft > 0) {
-                val seconds = state.resendSecondsLeft
-                Text(
-                    "Reenviar código em ${seconds / 60}:${(seconds % 60).toString().padStart(2, '0')}",
-                    style = muted,
-                    color = HippoColors.OnMuted,
-                )
-            } else {
-                HippoTextLink("Reenviar código", onClick = { onIntent(VerificationIntent.Resend) })
-            }
+            ResendCode(state.resendSecondsLeft, onResend = { onIntent(VerificationIntent.Resend) })
         }
 
         HippoPrimaryButton(

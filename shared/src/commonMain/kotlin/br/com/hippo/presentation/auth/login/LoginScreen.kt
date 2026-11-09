@@ -77,7 +77,7 @@ fun LoginScreen(
                     .size(88.dp)
                     .background(HippoColors.Primary, HippoShapes.Circle),
             ) {
-                Text("H", style = HippoTheme.type.title.copy(fontSize = 40.sp))
+                Text("H", style = HippoTheme.type.title.copy(fontSize = 40.sp), color = HippoColors.OnPrimary)
             }
             Text(
                 "Hippo",
