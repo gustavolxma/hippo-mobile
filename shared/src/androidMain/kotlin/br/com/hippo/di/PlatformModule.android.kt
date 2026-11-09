@@ -2,6 +2,8 @@ package br.com.hippo.di
 
 import br.com.hippo.core.storage.DATA_STORE_FILE_NAME
 import br.com.hippo.core.storage.createDataStore
+import br.com.hippo.data.voice.AndroidVoiceRecognizer
+import br.com.hippo.domain.voice.VoiceRecognizer
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import org.koin.android.ext.koin.androidContext
@@ -15,4 +17,5 @@ actual val platformModule: Module = module {
     single {
         createDataStore { androidContext().filesDir.resolve(DATA_STORE_FILE_NAME).absolutePath }
     }
+    single<VoiceRecognizer> { AndroidVoiceRecognizer(androidContext()) }
 }

@@ -4,9 +4,11 @@ import br.com.hippo.domain.model.Task
 import br.com.hippo.domain.model.TaskPriority
 import br.com.hippo.domain.model.TaskReminder
 import br.com.hippo.domain.usecase.TaskSection
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
+import kotlinx.datetime.plus
 
 // Textos e formatos exibidos ao usuário. Ficam na apresentação, não no domínio.
 
@@ -56,3 +58,14 @@ fun Task.subtitle(showDate: Boolean): String = buildList {
     dueTime?.let { add(it.formatted()) }
     add("Prioridade ${priority.label.lowercase()}")
 }.joinToString(" · ")
+
+/** "Hoje, 15:00", "Amanhã, 15:00", "13/11, 15:00", "13/11" ou "Sem data". */
+fun describeWhen(date: LocalDate?, time: LocalTime?, today: LocalDate): String {
+    val day = when (date) {
+        null -> return time?.let { "Hoje, ${it.formatted()}" } ?: "Sem data"
+        today -> "Hoje"
+        today.plus(DatePeriod(days = 1)) -> "Amanhã"
+        else -> date.formattedShort()
+    }
+    return time?.let { "$day, ${it.formatted()}" } ?: day
+}

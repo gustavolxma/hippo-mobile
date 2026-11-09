@@ -7,11 +7,13 @@ import br.com.hippo.data.remote.TaskApi
 import br.com.hippo.data.repository.FakeAuthRepository
 import br.com.hippo.data.repository.InMemoryTaskRepository
 import br.com.hippo.data.repository.RemoteTaskRepository
+import br.com.hippo.data.voice.LocalCommandInterpreter
 import br.com.hippo.domain.repository.AuthRepository
 import br.com.hippo.domain.repository.PreferencesRepository
 import br.com.hippo.domain.repository.TaskRepository
 import br.com.hippo.domain.usecase.DeleteTaskUseCase
 import br.com.hippo.domain.usecase.GetTaskUseCase
+import br.com.hippo.domain.usecase.InterpretVoiceCommandUseCase
 import br.com.hippo.domain.usecase.LoginUseCase
 import br.com.hippo.domain.usecase.LogoutUseCase
 import br.com.hippo.domain.usecase.ObserveCurrentUserUseCase
@@ -22,9 +24,11 @@ import br.com.hippo.domain.usecase.RequestAccountChangeCodeUseCase
 import br.com.hippo.domain.usecase.ResendCodeUseCase
 import br.com.hippo.domain.usecase.SaveTaskUseCase
 import br.com.hippo.domain.usecase.SetThemeModeUseCase
+import br.com.hippo.domain.usecase.TaskInput
 import br.com.hippo.domain.usecase.ToggleTaskDoneUseCase
 import br.com.hippo.domain.usecase.UpdateAccountUseCase
 import br.com.hippo.domain.usecase.VerifyCodeUseCase
+import br.com.hippo.domain.voice.CommandInterpreter
 import br.com.hippo.presentation.auth.login.LoginViewModel
 import br.com.hippo.presentation.auth.register.RegisterViewModel
 import br.com.hippo.presentation.auth.verification.VerificationViewModel
@@ -33,6 +37,7 @@ import br.com.hippo.presentation.root.AppRootViewModel
 import br.com.hippo.presentation.settings.SettingsViewModel
 import br.com.hippo.presentation.settings.changeaccount.ChangeAccountViewModel
 import br.com.hippo.presentation.taskdetails.TaskDetailsViewModel
+import br.com.hippo.presentation.voice.VoiceViewModel
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import org.koin.core.context.startKoin
@@ -73,6 +78,9 @@ val dataModule = module {
     // escolha entre ele e o falso aqui, como no TaskRepository acima.
     single<AuthRepository> { FakeAuthRepository(get()) }
     single<PreferencesRepository> { DataStorePreferencesRepository(get()) }
+    // Interpretação local por regras. Quando a API tiver a IA, troque por uma
+    // implementação que envia o texto ao backend (a tela de Voz não muda).
+    single<CommandInterpreter> { LocalCommandInterpreter() }
 }
 
 /** No modo sem API, as telas de código mostram o código fixo aceito, para facilitar os testes. */
@@ -97,6 +105,8 @@ val domainModule = module {
 
     factoryOf(::ObserveThemeModeUseCase)
     factoryOf(::SetThemeModeUseCase)
+
+    factoryOf(::InterpretVoiceCommandUseCase)
 }
 
 val presentationModule = module {
@@ -105,7 +115,10 @@ val presentationModule = module {
     viewModelOf(::RegisterViewModel)
     viewModel { params -> VerificationViewModel(params.get(), demoCode(), get(), get()) }
     viewModelOf(::HomeViewModel)
-    viewModel { params -> TaskDetailsViewModel(params.getOrNull(), get(), get(), get()) }
+    viewModel { params ->
+        TaskDetailsViewModel(params.getOrNull<String>(), params.getOrNull<TaskInput>(), get(), get(), get())
+    }
+    viewModelOf(::VoiceViewModel)
     viewModelOf(::SettingsViewModel)
     viewModel { ChangeAccountViewModel(demoCode(), get(), get(), get()) }
 }
