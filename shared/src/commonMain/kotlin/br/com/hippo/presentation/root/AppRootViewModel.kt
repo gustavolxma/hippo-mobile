@@ -5,9 +5,13 @@ import androidx.lifecycle.viewModelScope
 import br.com.hippo.domain.model.ThemeMode
 import br.com.hippo.domain.usecase.ObserveCurrentUserUseCase
 import br.com.hippo.domain.usecase.ObserveThemeModeUseCase
+import br.com.hippo.domain.usecase.ResyncRemindersUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 sealed interface SessionState {
@@ -25,11 +29,20 @@ sealed interface SessionState {
 class AppRootViewModel(
     observeCurrentUser: ObserveCurrentUserUseCase,
     observeThemeMode: ObserveThemeModeUseCase,
+    private val resyncReminders: ResyncRemindersUseCase,
 ) : ViewModel() {
 
     val session: StateFlow<SessionState> = observeCurrentUser()
         .map { user -> if (user == null) SessionState.SignedOut else SessionState.SignedIn }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SessionState.Loading)
+
+    init {
+        // Ao entrar (ou abrir o app já logado), garante que os lembretes do usuário estão agendados.
+        session
+            .filter { it == SessionState.SignedIn }
+            .onEach { resyncReminders() }
+            .launchIn(viewModelScope)
+    }
 
     /** `null` enquanto a preferência ainda está sendo lida. */
     val themeMode: StateFlow<ThemeMode?> = observeThemeMode()

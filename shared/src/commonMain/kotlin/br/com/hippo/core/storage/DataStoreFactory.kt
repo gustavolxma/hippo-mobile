@@ -13,3 +13,6 @@ internal const val DATA_STORE_FILE_NAME = "hippo.preferences_pb"
  */
 fun createDataStore(producePath: () -> String): DataStore<Preferences> =
     PreferenceDataStoreFactory.createWithPath(produceFile = { producePath().toPath() })
+
+/** Arquivo do banco SQLite com as tarefas (ver data/local/db/TaskEntity.sq). */
+internal const val DATABASE_FILE_NAME = "hippo.db"

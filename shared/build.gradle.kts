@@ -6,6 +6,16 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.sqldelight)
+}
+
+// Banco local: o esquema fica em src/commonMain/sqldelight e o código Kotlin é gerado no build.
+sqldelight {
+    databases {
+        create("HippoDatabase") {
+            packageName.set("br.com.hippo.data.local.db")
+        }
+    }
 }
 
 kotlin {
@@ -52,6 +62,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
+            implementation(libs.sqldelight.androidDriver)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
         }
@@ -82,9 +93,15 @@ kotlin {
 
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.okio)
+            implementation(libs.sqldelight.coroutines)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.sqldelight.nativeDriver)
+        }
+        getByName("androidHostTest").dependencies {
+            // Banco em memória no computador, para testar o repositório sem emulador.
+            implementation(libs.sqldelight.sqliteDriver)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

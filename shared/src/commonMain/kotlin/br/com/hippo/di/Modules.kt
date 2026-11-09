@@ -3,15 +3,17 @@ package br.com.hippo.di
 import br.com.hippo.core.network.createHttpClient
 import br.com.hippo.data.local.DataStorePreferencesRepository
 import br.com.hippo.data.local.SessionStorage
+import br.com.hippo.data.local.db.HippoDatabase
 import br.com.hippo.data.remote.TaskApi
 import br.com.hippo.data.repository.FakeAuthRepository
-import br.com.hippo.data.repository.InMemoryTaskRepository
+import br.com.hippo.data.repository.LocalTaskRepository
 import br.com.hippo.data.repository.RemoteTaskRepository
 import br.com.hippo.data.voice.LocalCommandInterpreter
 import br.com.hippo.domain.reminder.TaskReminderSync
 import br.com.hippo.domain.repository.AuthRepository
 import br.com.hippo.domain.repository.PreferencesRepository
 import br.com.hippo.domain.repository.TaskRepository
+import br.com.hippo.domain.usecase.CancelAllRemindersUseCase
 import br.com.hippo.domain.usecase.DeleteTaskUseCase
 import br.com.hippo.domain.usecase.GetTaskUseCase
 import br.com.hippo.domain.usecase.InterpretVoiceCommandUseCase
@@ -23,6 +25,7 @@ import br.com.hippo.domain.usecase.ObserveTasksUseCase
 import br.com.hippo.domain.usecase.RegisterUseCase
 import br.com.hippo.domain.usecase.RequestAccountChangeCodeUseCase
 import br.com.hippo.domain.usecase.ResendCodeUseCase
+import br.com.hippo.domain.usecase.ResyncRemindersUseCase
 import br.com.hippo.domain.usecase.SaveTaskUseCase
 import br.com.hippo.domain.usecase.SetThemeModeUseCase
 import br.com.hippo.domain.usecase.TaskInput
@@ -39,8 +42,6 @@ import br.com.hippo.presentation.settings.SettingsViewModel
 import br.com.hippo.presentation.settings.changeaccount.ChangeAccountViewModel
 import br.com.hippo.presentation.taskdetails.TaskDetailsViewModel
 import br.com.hippo.presentation.voice.VoiceViewModel
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -64,13 +65,14 @@ expect val platformModule: Module
 
 val dataModule = module {
     single<Clock> { Clock.System }
+    // O SqlDriver (SQLite de cada plataforma) vem do platformModule.
+    single { HippoDatabase(get()) }
     singleOf(::SessionStorage)
     single { createHttpClient(engine = get(), baseUrl = get<AppConfig>().baseUrl, sessionStorage = get()) }
     singleOf(::TaskApi)
     single<TaskRepository> {
         if (get<AppConfig>().useFakeBackend) {
-            val today = get<Clock>().todayIn(TimeZone.currentSystemDefault())
-            InMemoryTaskRepository(InMemoryTaskRepository.sampleTasks(today))
+            LocalTaskRepository(database = get(), currentUser = get<SessionStorage>().user)
         } else {
             RemoteTaskRepository(get())
         }
@@ -110,6 +112,9 @@ val domainModule = module {
     factoryOf(::SetThemeModeUseCase)
 
     factoryOf(::InterpretVoiceCommandUseCase)
+
+    factoryOf(::ResyncRemindersUseCase)
+    factoryOf(::CancelAllRemindersUseCase)
 }
 
 val presentationModule = module {
