@@ -13,10 +13,12 @@ sealed interface SettingsIntent {
     data object ChangeAccount : SettingsIntent
     data object SmartNotifications : SettingsIntent
     data object Privacy : SettingsIntent
+    data object VoiceMetrics : SettingsIntent
     data object Logout : SettingsIntent
 }
 
 sealed interface SettingsEffect {
     data object NavigateToChangeAccount : SettingsEffect
+    data object NavigateToVoiceMetrics : SettingsEffect
     data class ShowMessage(val message: String) : SettingsEffect
 }

@@ -29,6 +29,7 @@ class SettingsViewModel(
             // O tema muda na hora: a raiz do app observa a mesma preferência.
             is SettingsIntent.ThemeSelected -> viewModelScope.launch { setThemeMode(intent.mode) }
             SettingsIntent.ChangeAccount -> sendEffect(SettingsEffect.NavigateToChangeAccount)
+            SettingsIntent.VoiceMetrics -> sendEffect(SettingsEffect.NavigateToVoiceMetrics)
             SettingsIntent.SmartNotifications ->
                 sendEffect(SettingsEffect.ShowMessage("As notificações inteligentes chegam em uma próxima etapa"))
             SettingsIntent.Privacy ->

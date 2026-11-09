@@ -26,6 +26,7 @@ import br.com.hippo.presentation.components.HippoBottomBar
 import br.com.hippo.presentation.home.HomeRoute
 import br.com.hippo.presentation.settings.SettingsRoute
 import br.com.hippo.presentation.settings.changeaccount.ChangeAccountRoute
+import br.com.hippo.presentation.settings.metrics.VoiceMetricsRoute
 import br.com.hippo.presentation.taskdetails.TaskDetailsRoute
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.voice.VoiceRoute
@@ -85,6 +86,9 @@ data class TaskDetailsDestination(
 @Serializable
 data object ChangeAccountDestination
 
+@Serializable
+data object VoiceMetricsDestination
+
 /** Abas da barra inferior, na ordem em que aparecem. */
 private enum class Tab(val destination: Any, val route: KClass<*>, val item: BottomBarItem) {
     HOME(HomeDestination, HomeDestination::class, BottomBarItem("Início", Res.drawable.ic_home)),
@@ -118,10 +122,16 @@ fun AppNavHost() {
                     })
                 }
                 composable<SettingsDestination> {
-                    SettingsRoute(onNavigateToChangeAccount = { navController.navigate(ChangeAccountDestination) })
+                    SettingsRoute(
+                        onNavigateToChangeAccount = { navController.navigate(ChangeAccountDestination) },
+                        onNavigateToVoiceMetrics = { navController.navigate(VoiceMetricsDestination) },
+                    )
                 }
                 composable<ChangeAccountDestination> {
                     ChangeAccountRoute(onNavigateBack = { navController.popBackStack() })
+                }
+                composable<VoiceMetricsDestination> {
+                    VoiceMetricsRoute(onNavigateBack = { navController.popBackStack() })
                 }
                 composable<TaskDetailsDestination> { entry ->
                     val args = entry.toRoute<TaskDetailsDestination>()

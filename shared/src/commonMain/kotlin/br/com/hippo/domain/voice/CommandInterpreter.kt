@@ -20,6 +20,9 @@ sealed interface VoiceCommand {
  * que envia o texto ao backend — a tela de Voz não muda.
  */
 interface CommandInterpreter {
+    /** Identifica a implementação nas métricas: "local" ou, com a API, "ia". */
+    val name: String
+
     /** [now] permite resolver "hoje", "amanhã", "às 15h" em relação ao momento da fala. */
     suspend fun interpret(text: String, now: LocalDateTime): VoiceCommand
 }

@@ -24,6 +24,8 @@ import kotlinx.datetime.plus
  */
 class LocalCommandInterpreter : CommandInterpreter {
 
+    override val name: String = "local"
+
     override suspend fun interpret(text: String, now: LocalDateTime): VoiceCommand {
         val utterance = Utterance(text)
         val wantsReminder = utterance.consumeCommandPrefix()
