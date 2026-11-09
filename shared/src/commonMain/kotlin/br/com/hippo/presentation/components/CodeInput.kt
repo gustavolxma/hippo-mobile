@@ -77,7 +77,7 @@ fun CodeInput(
                     val isCurrent = focused && index == text.length.coerceAtMost(length - 1)
                     val borderColor = when {
                         isError -> HippoColors.Danger
-                        char != null -> HippoColors.Accent
+                        char != null -> HippoColors.AccentText
                         isCurrent -> HippoColors.Primary
                         else -> HippoColors.Track
                     }

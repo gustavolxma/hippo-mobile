@@ -40,6 +40,15 @@ private class RecordingAuthRepository : AuthRepository {
         calls += "resend:$email"
     }
 
+    override suspend fun requestAccountChangeCode() {
+        calls += "requestChangeCode"
+    }
+
+    override suspend fun updateAccount(code: String, newEmail: String?, newPassword: String?): User {
+        calls += "update:$code:$newEmail:$newPassword"
+        return user
+    }
+
     override suspend fun logout() {
         calls += "logout"
     }
@@ -100,6 +109,34 @@ class AuthUseCasesTest {
         assertEquals(setOf(AuthField.CODE), useCase("maria@email.com", "123").fieldErrors().keys)
         assertEquals(setOf(AuthField.CODE), useCase("maria@email.com", "12345a").fieldErrors().keys)
         assertTrue(useCase("maria@email.com", "123456").isSuccess)
+    }
+
+    @Test
+    fun `alterar conta envia so o que mudou`() = runTest {
+        val useCase = UpdateAccountUseCase(repository)
+
+        useCase("maria@email.com", "123456", newEmail = "maria@email.com", newPassword = "novasenha1")
+        useCase("maria@email.com", "123456", newEmail = " Nova@Email.com ", newPassword = "")
+
+        assertEquals(
+            listOf("update:123456:null:novasenha1", "update:123456:nova@email.com:null"),
+            repository.calls,
+        )
+    }
+
+    @Test
+    fun `alterar conta sem nenhuma mudanca e recusado`() = runTest {
+        val result = UpdateAccountUseCase(repository)("maria@email.com", "123456", "maria@email.com", "")
+
+        assertIs<AuthException.NothingToChange>(result.exceptionOrNull())
+        assertTrue(repository.calls.isEmpty())
+    }
+
+    @Test
+    fun `alterar conta valida codigo email e senha`() = runTest {
+        val errors = UpdateAccountUseCase(repository)("maria@email.com", "12", "invalido", "curta").fieldErrors()
+
+        assertEquals(setOf(AuthField.CODE, AuthField.EMAIL, AuthField.PASSWORD), errors.keys)
     }
 
     @Test

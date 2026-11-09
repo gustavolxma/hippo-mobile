@@ -6,6 +6,7 @@ import br.com.hippo.domain.repository.AuthException
 import br.com.hippo.domain.repository.AuthRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.uuid.Uuid
@@ -15,7 +16,8 @@ import kotlin.uuid.Uuid
  * (somem ao fechar o app), mas a sessão é salva de verdade no DataStore.
  *
  * - Conta de demonstração: [DEMO_EMAIL] / [DEMO_PASSWORD] (os dados do protótipo).
- * - O código de verificação (login e cadastro) é sempre [FAKE_CODE]: não há envio de e-mail.
+ * - O código de verificação (login, cadastro e alteração de conta) é sempre [FAKE_CODE]:
+ *   não há envio de e-mail.
  */
 class FakeAuthRepository(
     private val sessionStorage: SessionStorage,
@@ -68,6 +70,31 @@ class FakeAuthRepository(
 
     override suspend fun resendCode(email: String) {
         delay(networkDelayMillis)
+    }
+
+    override suspend fun requestAccountChangeCode() {
+        delay(networkDelayMillis)
+        if (sessionStorage.user.first() == null) throw AuthException.NotSignedIn()
+    }
+
+    override suspend fun updateAccount(code: String, newEmail: String?, newPassword: String?): User {
+        delay(networkDelayMillis)
+        val current = sessionStorage.user.first() ?: throw AuthException.NotSignedIn()
+        if (code != FAKE_CODE) throw AuthException.InvalidCode()
+        val updated = mutex.withLock {
+            // A conta pode não estar em memória se o app foi reaberto com a sessão salva.
+            val account = accounts.remove(current.email) ?: Account(current, password = "")
+            val email = newEmail ?: current.email
+            if (email in accounts) {
+                accounts[current.email] = account
+                throw AuthException.EmailAlreadyInUse()
+            }
+            val updated = Account(account.user.copy(email = email), newPassword ?: account.password)
+            accounts[email] = updated
+            updated.user
+        }
+        startSession(updated)
+        return updated
     }
 
     override suspend fun logout() {

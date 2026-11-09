@@ -22,6 +22,15 @@ interface AuthRepository {
 
     suspend fun resendCode(email: String)
 
+    /** Envia um código para o e-mail atual, exigido para alterar e-mail ou senha. */
+    suspend fun requestAccountChangeCode()
+
+    /**
+     * Altera e-mail e/ou senha do usuário logado (`null` mantém o atual), após conferir o
+     * código enviado por [requestAccountChangeCode]. Devolve o usuário atualizado.
+     */
+    suspend fun updateAccount(code: String, newEmail: String?, newPassword: String?): User
+
     suspend fun logout()
 }
 
@@ -30,4 +39,6 @@ sealed class AuthException(message: String) : Exception(message) {
     class InvalidCredentials : AuthException("E-mail ou senha incorretos")
     class EmailAlreadyInUse : AuthException("Já existe uma conta com este e-mail")
     class InvalidCode : AuthException("Código inválido ou expirado")
+    class NothingToChange : AuthException("Informe um novo e-mail ou uma nova senha")
+    class NotSignedIn : AuthException("Sua sessão expirou. Entre novamente.")
 }

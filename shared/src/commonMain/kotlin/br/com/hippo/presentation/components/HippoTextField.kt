@@ -95,7 +95,7 @@ fun HippoTextField(
             keyboardActions = keyboardActions,
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
             textStyle = HippoTheme.type.body.copy(color = HippoColors.OnBackground),
-            cursorBrush = SolidColor(HippoColors.Accent),
+            cursorBrush = SolidColor(HippoColors.Primary),
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { focused = it.isFocused },

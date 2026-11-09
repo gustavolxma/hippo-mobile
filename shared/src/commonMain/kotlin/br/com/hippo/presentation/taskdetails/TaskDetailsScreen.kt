@@ -51,6 +51,7 @@ import br.com.hippo.presentation.components.label
 import br.com.hippo.presentation.theme.HippoColors
 import br.com.hippo.presentation.theme.HippoShapes
 import br.com.hippo.presentation.theme.HippoTheme
+import br.com.hippo.presentation.theme.hippoCard
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -105,7 +106,7 @@ fun TaskDetailsScreen(state: TaskDetailsState, onIntent: (TaskDetailsIntent) -> 
 
         if (state.isLoading) {
             Box(Modifier.fillMaxWidth().weight(1f), Alignment.Center) {
-                CircularProgressIndicator(color = HippoColors.Accent)
+                CircularProgressIndicator(color = HippoColors.AccentText)
             }
             return@Column
         }
@@ -120,7 +121,7 @@ fun TaskDetailsScreen(state: TaskDetailsState, onIntent: (TaskDetailsIntent) -> 
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(HippoColors.Surface, HippoShapes.Large)
+                    .hippoCard(HippoShapes.Large)
                     .padding(horizontal = 16.dp, vertical = 14.dp),
             ) {
                 HippoTextField(

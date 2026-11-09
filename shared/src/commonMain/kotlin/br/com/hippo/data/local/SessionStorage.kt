@@ -34,8 +34,11 @@ class SessionStorage(private val dataStore: DataStore<Preferences>) {
         }
     }
 
+    /** Remove só os dados da sessão; preferências do aparelho (como o tema) ficam. */
     suspend fun clear() {
-        dataStore.edit { it.clear() }
+        dataStore.edit { prefs ->
+            listOf(ACCESS_TOKEN, USER_ID, USER_NAME, USER_EMAIL).forEach { prefs.remove(it) }
+        }
     }
 
     private companion object {
