@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone temático (Android 13+): uma cor só; o sistema aplica a cor do tema do usuário. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Cavalo-marinho do protótipo (desenhado em 512x512), reduzido para a área segura do ícone. -->
+    <group
+        android:scaleX="0.1602"
+        android:scaleY="0.1602"
+        android:translateX="13.0"
+        android:translateY="13.3">
+        <group
+            android:translateX="-6"
+            android:translateY="-19">
+            <path android:pathData="M285,175C225,215 225,285 270,325" android:strokeColor="#FF000000" android:strokeWidth="80" android:strokeLineCap="round" />
+            <path android:pathData="M270,325C320,360 325,410 285,432" android:strokeColor="#FF000000" android:strokeWidth="44" android:strokeLineCap="round" />
+            <path android:pathData="M285,432C250,450 215,425 228,396C236,378 258,380 258,396" android:strokeColor="#FF000000" android:strokeWidth="24" android:strokeLineCap="round" />
+            <path android:pathData="M244,150a46,46 0,1 0,92 0a46,46 0,1 0,-92 0" android:fillColor="#FF000000" />
+            <path android:pathData="M262,158L190,172" android:strokeColor="#FF000000" android:strokeWidth="22" android:strokeLineCap="round" />
+            <path android:pathData="M276,232Q335,265 276,312Q300,272 276,232Z" android:fillColor="#FF000000" />
+            <path android:pathData="M264,106a8,8 0,1 0,16 0a8,8 0,1 0,-16 0" android:fillColor="#FF000000" />
+            <path android:pathData="M284,100a8,8 0,1 0,16 0a8,8 0,1 0,-16 0" android:fillColor="#FF000000" />
+            <path android:pathData="M304,106a8,8 0,1 0,16 0a8,8 0,1 0,-16 0" android:fillColor="#FF000000" />
+        </group>
+    </group>
+</vector>
