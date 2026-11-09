@@ -14,6 +14,8 @@ class TaskApi(private val client: HttpClient) {
 
     suspend fun getTasks(): List<TaskDto> = client.get("tasks").body()
 
+    suspend fun getTask(id: String): TaskDto = client.get("tasks/$id").body()
+
     suspend fun createTask(task: TaskDto): TaskDto =
         client.post("tasks") { setBody(task) }.body()
 

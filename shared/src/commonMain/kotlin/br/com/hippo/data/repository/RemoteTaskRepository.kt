@@ -21,6 +21,9 @@ class RemoteTaskRepository(private val api: TaskApi) : TaskRepository {
     override fun observeTasks(): Flow<List<Task>> =
         cache.onStart { refresh() }
 
+    override suspend fun getTask(id: String): Task? =
+        cache.value.firstOrNull { it.id == id } ?: api.getTask(id).toDomain()
+
     private suspend fun refresh() {
         cache.value = api.getTasks().map { it.toDomain() }
     }

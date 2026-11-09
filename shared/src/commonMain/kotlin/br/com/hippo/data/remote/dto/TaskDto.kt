@@ -2,7 +2,9 @@ package br.com.hippo.data.remote.dto
 
 import br.com.hippo.domain.model.Task
 import br.com.hippo.domain.model.TaskPriority
-import kotlinx.datetime.LocalDateTime
+import br.com.hippo.domain.model.TaskReminder
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.serialization.Serializable
 
 /**
@@ -16,7 +18,11 @@ data class TaskDto(
     val title: String,
     val description: String? = null,
     val priority: String = TaskPriority.MEDIUM.name,
-    val dueAt: String? = null,
+    /** ISO-8601, ex.: "2026-10-28". */
+    val dueDate: String? = null,
+    /** ISO-8601, ex.: "14:00". */
+    val dueTime: String? = null,
+    val reminderMinutesBefore: Int? = null,
     val done: Boolean = false,
 )
 
@@ -25,7 +31,10 @@ fun TaskDto.toDomain() = Task(
     title = title,
     description = description.orEmpty(),
     priority = TaskPriority.entries.firstOrNull { it.name == priority } ?: TaskPriority.MEDIUM,
-    dueAt = dueAt?.let(LocalDateTime::parse),
+    dueDate = dueDate?.let(LocalDate::parse),
+    dueTime = dueTime?.let(LocalTime::parse),
+    reminder = TaskReminder.entries.firstOrNull { it.minutesBefore == reminderMinutesBefore }
+        ?: TaskReminder.NONE,
     isDone = done,
 )
 
@@ -34,6 +43,8 @@ fun Task.toDto() = TaskDto(
     title = title,
     description = description,
     priority = priority.name,
-    dueAt = dueAt?.toString(),
+    dueDate = dueDate?.toString(),
+    dueTime = dueTime?.toString(),
+    reminderMinutesBefore = reminder.minutesBefore,
     done = isDone,
 )
