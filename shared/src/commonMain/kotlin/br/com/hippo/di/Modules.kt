@@ -4,12 +4,14 @@ import br.com.hippo.core.network.createHttpClient
 import br.com.hippo.data.local.DataStorePreferencesRepository
 import br.com.hippo.data.local.SessionStorage
 import br.com.hippo.data.local.db.HippoDatabase
+import br.com.hippo.data.metrics.LocalVoiceMetricsRepository
 import br.com.hippo.data.remote.TaskApi
 import br.com.hippo.data.repository.FakeAuthRepository
 import br.com.hippo.data.repository.LocalTaskRepository
 import br.com.hippo.data.repository.RemoteTaskRepository
 import br.com.hippo.data.voice.LocalCommandInterpreter
 import br.com.hippo.domain.reminder.TaskReminderSync
+import br.com.hippo.domain.metrics.VoiceMetricsRepository
 import br.com.hippo.domain.repository.AuthRepository
 import br.com.hippo.domain.repository.PreferencesRepository
 import br.com.hippo.domain.repository.TaskRepository
@@ -40,6 +42,7 @@ import br.com.hippo.presentation.home.HomeViewModel
 import br.com.hippo.presentation.root.AppRootViewModel
 import br.com.hippo.presentation.settings.SettingsViewModel
 import br.com.hippo.presentation.settings.changeaccount.ChangeAccountViewModel
+import br.com.hippo.presentation.settings.metrics.VoiceMetricsViewModel
 import br.com.hippo.presentation.taskdetails.TaskDetailsViewModel
 import br.com.hippo.presentation.voice.VoiceViewModel
 import org.koin.core.context.startKoin
@@ -84,6 +87,9 @@ val dataModule = module {
     // Interpretação local por regras. Quando a API tiver a IA, troque por uma
     // implementação que envia o texto ao backend (a tela de Voz não muda).
     single<CommandInterpreter> { LocalCommandInterpreter() }
+    single<VoiceMetricsRepository> {
+        LocalVoiceMetricsRepository(database = get(), currentUser = get<SessionStorage>().user)
+    }
     // O ReminderScheduler vem do platformModule (Android/iOS).
     single { TaskReminderSync(scheduler = get(), clock = get()) }
 }
@@ -127,6 +133,7 @@ val presentationModule = module {
         TaskDetailsViewModel(params.getOrNull<String>(), params.getOrNull<TaskInput>(), get(), get(), get())
     }
     viewModelOf(::VoiceViewModel)
+    viewModelOf(::VoiceMetricsViewModel)
     viewModelOf(::SettingsViewModel)
     viewModel { ChangeAccountViewModel(demoCode(), get(), get(), get()) }
 }

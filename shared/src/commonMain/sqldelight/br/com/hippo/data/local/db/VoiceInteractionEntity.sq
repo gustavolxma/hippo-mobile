@@ -1,0 +1,44 @@
+-- Registro de cada uso do comando de voz, para medir a solução (metodologia do TCC):
+-- acurácia da interpretação, quanto o usuário precisou corrigir e tempos de resposta.
+-- Fica só no aparelho.
+
+CREATE TABLE VoiceInteractionEntity (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    owner_id TEXT NOT NULL,
+    -- Momento da fala, ISO-8601 em UTC: "2026-11-09T12:00:00Z"
+    created_at TEXT NOT NULL,
+    -- Quem interpretou: "local" (regras) ou, no futuro, "ia" (API)
+    interpreter TEXT NOT NULL,
+    transcript TEXT NOT NULL,
+    -- O que foi entendido (nulo quando não entendeu)
+    result_title TEXT,
+    result_date TEXT,
+    result_time TEXT,
+    result_priority TEXT,
+    -- PENDING, CONFIRMED, EDITED, DISCARDED, NOT_UNDERSTOOD, RECOGNITION_FAILED
+    outcome TEXT NOT NULL,
+    -- Do toque no microfone até a transcrição final
+    recognition_ms INTEGER,
+    -- Tempo para interpretar o texto
+    interpretation_ms INTEGER
+);
+
+CREATE INDEX voice_owner ON VoiceInteractionEntity(owner_id);
+
+insert:
+INSERT INTO VoiceInteractionEntity(
+    owner_id, created_at, interpreter, transcript, result_title, result_date, result_time,
+    result_priority, outcome, recognition_ms, interpretation_ms
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+lastInsertedId:
+SELECT last_insert_rowid();
+
+updateOutcome:
+UPDATE VoiceInteractionEntity SET outcome = ? WHERE id = ?;
+
+selectByOwner:
+SELECT * FROM VoiceInteractionEntity WHERE owner_id = ? ORDER BY id DESC;
+
+deleteByOwner:
+DELETE FROM VoiceInteractionEntity WHERE owner_id = ?;

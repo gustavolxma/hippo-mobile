@@ -11,6 +11,8 @@ class InterpretVoiceCommandUseCase(
     private val interpreter: CommandInterpreter,
     private val clock: Clock,
 ) {
+    val interpreterName: String get() = interpreter.name
+
     suspend operator fun invoke(text: String): VoiceCommand {
         val now = clock.now().toLocalDateTime(TimeZone.currentSystemDefault())
         return interpreter.interpret(text, now)

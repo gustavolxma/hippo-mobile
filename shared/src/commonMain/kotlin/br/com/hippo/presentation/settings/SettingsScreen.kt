@@ -48,6 +48,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun SettingsRoute(
     onNavigateToChangeAccount: () -> Unit,
+    onNavigateToVoiceMetrics: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -57,6 +58,7 @@ fun SettingsRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 SettingsEffect.NavigateToChangeAccount -> onNavigateToChangeAccount()
+                SettingsEffect.NavigateToVoiceMetrics -> onNavigateToVoiceMetrics()
                 is SettingsEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
             }
         }
@@ -103,6 +105,7 @@ fun SettingsScreen(state: SettingsState, onIntent: (SettingsIntent) -> Unit) {
         SettingsRow("Alterar e-mail ou senha", onClick = { onIntent(SettingsIntent.ChangeAccount) })
         SettingsRow("Notificações inteligentes", onClick = { onIntent(SettingsIntent.SmartNotifications) })
         SettingsRow("Privacidade e dados", onClick = { onIntent(SettingsIntent.Privacy) })
+        SettingsRow("Métricas de voz", onClick = { onIntent(SettingsIntent.VoiceMetrics) })
         SettingsRow("Sair da conta", onClick = { onIntent(SettingsIntent.Logout) }, textColor = HippoColors.Danger)
     }
 }

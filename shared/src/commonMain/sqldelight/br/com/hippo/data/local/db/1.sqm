@@ -1,0 +1,19 @@
+-- Migração da versão 1 para a 2 do banco: adiciona o registro dos comandos de voz.
+-- Aparelhos que já tinham o app instalado ganham a tabela nova sem perder as tarefas.
+
+CREATE TABLE VoiceInteractionEntity (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    owner_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    interpreter TEXT NOT NULL,
+    transcript TEXT NOT NULL,
+    result_title TEXT,
+    result_date TEXT,
+    result_time TEXT,
+    result_priority TEXT,
+    outcome TEXT NOT NULL,
+    recognition_ms INTEGER,
+    interpretation_ms INTEGER
+);
+
+CREATE INDEX voice_owner ON VoiceInteractionEntity(owner_id);

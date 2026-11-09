@@ -14,6 +14,8 @@ sqldelight {
     databases {
         create("HippoDatabase") {
             packageName.set("br.com.hippo.data.local.db")
+            // Mudanças no esquema exigem um arquivo de migração N.sqm (ver 1.sqm) e um teste
+            // em DatabaseMigrationTest, para não quebrar o banco de quem já tem o app.
         }
     }
 }
