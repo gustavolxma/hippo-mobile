@@ -4,6 +4,7 @@ import br.com.hippo.data.repository.InMemoryTaskRepository
 import br.com.hippo.domain.model.Task
 import br.com.hippo.domain.model.TaskPriority
 import br.com.hippo.domain.model.TaskReminder
+import br.com.hippo.domain.reminder.testReminderSync
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -38,7 +39,7 @@ class TaskUseCasesTest {
     fun `nao salva tarefa com titulo vazio`() = runTest {
         val repository = InMemoryTaskRepository()
 
-        val result = SaveTaskUseCase(repository)(TaskInput(title = "   "))
+        val result = SaveTaskUseCase(repository, testReminderSync())(TaskInput(title = "   "))
 
         assertIs<TaskValidationException>(result.exceptionOrNull())
         assertTrue(repository.observeTasks().first().isEmpty())
@@ -46,7 +47,7 @@ class TaskUseCasesTest {
 
     @Test
     fun `exige data quando ha horario`() = runTest {
-        val result = SaveTaskUseCase(InMemoryTaskRepository())(
+        val result = SaveTaskUseCase(InMemoryTaskRepository(), testReminderSync())(
             TaskInput(title = "Reunião", dueTime = LocalTime(10, 0)),
         )
 
@@ -55,7 +56,7 @@ class TaskUseCasesTest {
 
     @Test
     fun `remove lembrete quando nao ha horario`() = runTest {
-        val saved = SaveTaskUseCase(InMemoryTaskRepository())(
+        val saved = SaveTaskUseCase(InMemoryTaskRepository(), testReminderSync())(
             TaskInput(title = "Estudar", dueDate = today, reminder = TaskReminder.MINUTES_30),
         ).getOrThrow()
 
@@ -66,7 +67,7 @@ class TaskUseCasesTest {
     fun `cria tarefa nova com titulo sem espacos extras`() = runTest {
         val repository = InMemoryTaskRepository()
 
-        SaveTaskUseCase(repository)(TaskInput(title = "  Estudar KMP  ", priority = TaskPriority.HIGH))
+        SaveTaskUseCase(repository, testReminderSync())(TaskInput(title = "  Estudar KMP  ", priority = TaskPriority.HIGH))
 
         val saved = repository.observeTasks().first().single()
         assertEquals("Estudar KMP", saved.title)
@@ -78,7 +79,7 @@ class TaskUseCasesTest {
         val existing = Task(id = "1", title = "Antigo", isDone = true)
         val repository = InMemoryTaskRepository(listOf(existing))
 
-        SaveTaskUseCase(repository)(TaskInput(title = "Novo"), existing = existing)
+        SaveTaskUseCase(repository, testReminderSync())(TaskInput(title = "Novo"), existing = existing)
 
         val saved = repository.observeTasks().first().single()
         assertEquals("1", saved.id)

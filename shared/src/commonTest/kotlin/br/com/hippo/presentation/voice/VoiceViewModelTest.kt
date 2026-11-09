@@ -3,6 +3,7 @@ package br.com.hippo.presentation.voice
 import br.com.hippo.data.repository.InMemoryTaskRepository
 import br.com.hippo.data.voice.LocalCommandInterpreter
 import br.com.hippo.domain.model.TaskPriority
+import br.com.hippo.domain.reminder.testReminderSync
 import br.com.hippo.domain.usecase.InterpretVoiceCommandUseCase
 import br.com.hippo.domain.usecase.SaveTaskUseCase
 import br.com.hippo.domain.voice.SpeechError
@@ -58,7 +59,7 @@ class VoiceViewModelTest {
     private fun viewModel(recognizer: VoiceRecognizer) = VoiceViewModel(
         recognizer = recognizer,
         interpretCommand = InterpretVoiceCommandUseCase(LocalCommandInterpreter(), fixedClock),
-        saveTask = SaveTaskUseCase(repository),
+        saveTask = SaveTaskUseCase(repository, testReminderSync()),
     )
 
     private val prototypePhrase = listOf(

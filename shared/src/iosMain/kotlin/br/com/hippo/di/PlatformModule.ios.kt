@@ -2,7 +2,9 @@ package br.com.hippo.di
 
 import br.com.hippo.core.storage.DATA_STORE_FILE_NAME
 import br.com.hippo.core.storage.createDataStore
+import br.com.hippo.data.reminder.IosReminderScheduler
 import br.com.hippo.data.voice.IosVoiceRecognizer
+import br.com.hippo.domain.reminder.ReminderScheduler
 import br.com.hippo.domain.voice.VoiceRecognizer
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.darwin.Darwin
@@ -24,6 +26,7 @@ actual val platformModule: Module = module {
     single<HttpClientEngine> { Darwin.create() }
     single { createDataStore { documentDirectory() + "/$DATA_STORE_FILE_NAME" } }
     single<VoiceRecognizer> { IosVoiceRecognizer() }
+    single<ReminderScheduler> { IosReminderScheduler() }
 }
 
 @OptIn(ExperimentalForeignApi::class)

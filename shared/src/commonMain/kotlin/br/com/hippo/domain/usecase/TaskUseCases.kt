@@ -3,6 +3,7 @@ package br.com.hippo.domain.usecase
 import br.com.hippo.domain.model.Task
 import br.com.hippo.domain.model.TaskPriority
 import br.com.hippo.domain.model.TaskReminder
+import br.com.hippo.domain.reminder.TaskReminderSync
 import br.com.hippo.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -44,8 +45,14 @@ data class TaskInput(
 
 class TaskValidationException(message: String) : IllegalArgumentException(message)
 
-/** Cria a tarefa quando [existing] é nulo; caso contrário, atualiza a existente. */
-class SaveTaskUseCase(private val repository: TaskRepository) {
+/**
+ * Cria a tarefa quando [existing] é nulo; caso contrário, atualiza a existente.
+ * Em seguida agenda (ou cancela) a notificação de lembrete dela.
+ */
+class SaveTaskUseCase(
+    private val repository: TaskRepository,
+    private val reminders: TaskReminderSync,
+) {
     suspend operator fun invoke(input: TaskInput, existing: Task? = null): Result<Task> {
         val title = input.title.trim()
         if (title.isEmpty()) {
@@ -67,16 +74,28 @@ class SaveTaskUseCase(private val repository: TaskRepository) {
         )
         return runCatching {
             if (existing == null) repository.addTask(task) else repository.updateTask(task)
-        }.map { task }
+        }.map {
+            reminders.sync(task)
+            task
+        }
     }
 }
 
-class ToggleTaskDoneUseCase(private val repository: TaskRepository) {
-    suspend operator fun invoke(task: Task): Result<Unit> =
-        runCatching { repository.updateTask(task.copy(isDone = !task.isDone)) }
+/** Concluir cancela o lembrete; reabrir a tarefa agenda de novo (se ainda for futuro). */
+class ToggleTaskDoneUseCase(
+    private val repository: TaskRepository,
+    private val reminders: TaskReminderSync,
+) {
+    suspend operator fun invoke(task: Task): Result<Unit> {
+        val updated = task.copy(isDone = !task.isDone)
+        return runCatching { repository.updateTask(updated) }.map { reminders.sync(updated) }
+    }
 }
 
-class DeleteTaskUseCase(private val repository: TaskRepository) {
+class DeleteTaskUseCase(
+    private val repository: TaskRepository,
+    private val reminders: TaskReminderSync,
+) {
     suspend operator fun invoke(id: String): Result<Unit> =
-        runCatching { repository.deleteTask(id) }
+        runCatching { repository.deleteTask(id) }.map { reminders.cancel(id) }
 }
