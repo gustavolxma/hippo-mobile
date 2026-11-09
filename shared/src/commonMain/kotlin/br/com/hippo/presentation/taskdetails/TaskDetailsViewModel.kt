@@ -11,16 +11,17 @@ import br.com.hippo.domain.usecase.TaskValidationException
 import kotlinx.coroutines.launch
 
 /**
- * Tela de criar/editar tarefa. Com [taskId] nulo, cria uma nova; caso contrário,
- * carrega a tarefa existente para edição.
+ * Tela de criar/editar tarefa. Com [taskId] nulo, cria uma nova (pré-preenchida com
+ * [draft], quando vem da tela de Voz); caso contrário, carrega a tarefa para edição.
  */
 class TaskDetailsViewModel(
     private val taskId: String?,
+    draft: TaskInput?,
     private val getTask: GetTaskUseCase,
     private val saveTask: SaveTaskUseCase,
     private val deleteTask: DeleteTaskUseCase,
 ) : MviViewModel<TaskDetailsState, TaskDetailsIntent, TaskDetailsEffect>(
-    TaskDetailsState(isNew = taskId == null, isLoading = taskId != null),
+    TaskDetailsState(isNew = taskId == null, isLoading = taskId != null).withDraft(draft),
 ) {
 
     private var original: Task? = null
@@ -97,3 +98,13 @@ class TaskDetailsViewModel(
         }
     }
 }
+
+private fun TaskDetailsState.withDraft(draft: TaskInput?): TaskDetailsState =
+    if (draft == null) this else copy(
+        title = draft.title,
+        description = draft.description,
+        priority = draft.priority,
+        dueDate = draft.dueDate,
+        dueTime = draft.dueTime,
+        reminder = draft.reminder,
+    )

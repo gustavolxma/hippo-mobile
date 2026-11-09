@@ -4,5 +4,9 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O Hippo usa o microfone para ouvir seus comandos de voz e criar tarefas.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>O Hippo transforma sua fala em texto para entender os comandos de tarefas.</string>
 </dict>
 </plist>

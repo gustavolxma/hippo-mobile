@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.hippo.domain.model.TaskReminder
+import br.com.hippo.domain.usecase.TaskInput
 import br.com.hippo.presentation.components.HippoConfirmDialog
 import br.com.hippo.presentation.components.HippoDangerOutlinedButton
 import br.com.hippo.presentation.components.HippoPickerField
@@ -65,7 +66,9 @@ import kotlin.time.Instant
 fun TaskDetailsRoute(
     taskId: String?,
     onNavigateBack: () -> Unit,
-    viewModel: TaskDetailsViewModel = koinViewModel(key = taskId ?: "new") { parametersOf(taskId) },
+    draft: TaskInput? = null,
+    // Cada entrada da navegação tem seu próprio ViewModel; os parâmetros só valem na criação.
+    viewModel: TaskDetailsViewModel = koinViewModel { parametersOf(taskId, draft) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
