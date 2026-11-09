@@ -11,12 +11,13 @@ interface AuthRepository {
     /** Usuário logado, ou `null` quando não há sessão. */
     val currentUser: Flow<User?>
 
-    suspend fun login(email: String, password: String): User
+    /** Confere e-mail e senha e envia o código de verificação; a sessão só abre em [verifyCode]. */
+    suspend fun login(email: String, password: String)
 
     /** Inicia o cadastro e envia o código de verificação para o [email]. */
     suspend fun register(name: String, email: String, password: String)
 
-    /** Confirma o código enviado no cadastro; conclui a conta e abre a sessão. */
+    /** Confirma o código enviado no login ou no cadastro e abre a sessão. */
     suspend fun verifyCode(email: String, code: String): User
 
     suspend fun resendCode(email: String)

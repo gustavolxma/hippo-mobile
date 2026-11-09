@@ -19,5 +19,6 @@ sealed interface LoginIntent {
 
 sealed interface LoginEffect {
     data object NavigateToRegister : LoginEffect
+    data class NavigateToVerification(val email: String) : LoginEffect
     data class ShowMessage(val message: String) : LoginEffect
 }

@@ -20,10 +20,9 @@ private class RecordingAuthRepository : AuthRepository {
 
     override val currentUser: Flow<User?> = MutableStateFlow(null)
 
-    override suspend fun login(email: String, password: String): User {
+    override suspend fun login(email: String, password: String) {
         calls += "login:$email"
         failWith?.let { throw it }
-        return user
     }
 
     override suspend fun register(name: String, email: String, password: String) {
@@ -54,10 +53,10 @@ class AuthUseCasesTest {
         assertIs<FormValidationException>(exceptionOrNull()).errors
 
     @Test
-    fun `login normaliza o email antes de chamar o repositorio`() = runTest {
+    fun `login normaliza o email e devolve para onde o codigo foi enviado`() = runTest {
         val result = LoginUseCase(repository)("  Maria@Email.com ", "senha1234")
 
-        assertTrue(result.isSuccess)
+        assertEquals("maria@email.com", result.getOrThrow())
         assertEquals(listOf("login:maria@email.com"), repository.calls)
     }
 

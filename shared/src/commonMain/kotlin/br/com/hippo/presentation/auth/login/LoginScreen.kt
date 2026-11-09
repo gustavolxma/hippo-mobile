@@ -41,6 +41,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun LoginRoute(
     onNavigateToRegister: () -> Unit,
+    onNavigateToVerification: (email: String) -> Unit,
     viewModel: LoginViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -50,6 +51,7 @@ fun LoginRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 LoginEffect.NavigateToRegister -> onNavigateToRegister()
+                is LoginEffect.NavigateToVerification -> onNavigateToVerification(effect.email)
                 is LoginEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
             }
         }
