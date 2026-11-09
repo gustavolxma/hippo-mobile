@@ -1,7 +1,11 @@
 package br.com.hippo.di
 
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.driver.native.NativeSqliteDriver
+import br.com.hippo.core.storage.DATABASE_FILE_NAME
 import br.com.hippo.core.storage.DATA_STORE_FILE_NAME
 import br.com.hippo.core.storage.createDataStore
+import br.com.hippo.data.local.db.HippoDatabase
 import br.com.hippo.data.reminder.IosReminderScheduler
 import br.com.hippo.data.voice.IosVoiceRecognizer
 import br.com.hippo.domain.reminder.ReminderScheduler
@@ -25,6 +29,7 @@ actual val platformModule: Module = module {
     single { AppConfig(baseUrl = "http://localhost:8080/api/") }
     single<HttpClientEngine> { Darwin.create() }
     single { createDataStore { documentDirectory() + "/$DATA_STORE_FILE_NAME" } }
+    single<SqlDriver> { NativeSqliteDriver(HippoDatabase.Schema, DATABASE_FILE_NAME) }
     single<VoiceRecognizer> { IosVoiceRecognizer() }
     single<ReminderScheduler> { IosReminderScheduler() }
 }

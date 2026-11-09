@@ -132,6 +132,13 @@ class ResendCodeUseCase(private val repository: AuthRepository) {
     }
 }
 
-class LogoutUseCase(private val repository: AuthRepository) {
-    suspend operator fun invoke(): Result<Unit> = validated(emptyMap()) { repository.logout() }
+/** Sai da conta, cancelando antes os lembretes do usuário (enquanto ainda se sabe quem é). */
+class LogoutUseCase(
+    private val repository: AuthRepository,
+    private val cancelAllReminders: CancelAllRemindersUseCase,
+) {
+    suspend operator fun invoke(): Result<Unit> = validated(emptyMap()) {
+        cancelAllReminders()
+        repository.logout()
+    }
 }

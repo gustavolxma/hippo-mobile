@@ -10,6 +10,8 @@
         android:name="android.permission.SCHEDULE_EXACT_ALARM"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Reagendar os lembretes depois que o celular reinicia. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Android 11+: permite encontrar o serviço de reconhecimento de fala do aparelho. -->
     <queries>
@@ -41,6 +43,18 @@
         <receiver
             android:name="br.com.hippo.data.reminder.ReminderReceiver"
             android:exported="false" />
+
+        <!-- Reagenda os lembretes. Estes avisos só podem ser enviados pelo próprio sistema. -->
+        <receiver
+            android:name="br.com.hippo.data.reminder.RescheduleRemindersReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

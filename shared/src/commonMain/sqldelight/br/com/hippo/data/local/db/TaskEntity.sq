@@ -1,0 +1,34 @@
+-- Tarefas salvas no aparelho. O SQLDelight gera, a partir deste arquivo,
+-- a classe TaskEntity e as funções Kotlin de cada consulta abaixo.
+
+CREATE TABLE TaskEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    -- Dono da tarefa: quem entrar depois no mesmo aparelho não vê as tarefas de outro usuário.
+    owner_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    -- LOW, MEDIUM ou HIGH
+    priority TEXT NOT NULL,
+    -- ISO-8601: "2026-11-10"
+    due_date TEXT,
+    -- ISO-8601: "15:00"
+    due_time TEXT,
+    -- NONE, AT_TIME, MINUTES_10...
+    reminder TEXT NOT NULL,
+    -- 0 = pendente, 1 = concluída
+    is_done INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX task_owner ON TaskEntity(owner_id);
+
+selectByOwner:
+SELECT * FROM TaskEntity WHERE owner_id = ?;
+
+selectById:
+SELECT * FROM TaskEntity WHERE id = ? AND owner_id = ?;
+
+upsert:
+INSERT OR REPLACE INTO TaskEntity VALUES ?;
+
+deleteById:
+DELETE FROM TaskEntity WHERE id = ? AND owner_id = ?;
