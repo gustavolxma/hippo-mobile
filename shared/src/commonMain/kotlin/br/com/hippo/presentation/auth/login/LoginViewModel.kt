@@ -9,8 +9,8 @@ import br.com.hippo.presentation.auth.toFormErrors
 import kotlinx.coroutines.launch
 
 /**
- * Ao entrar com sucesso não há navegação explícita: a sessão salva faz a raiz do app
- * trocar para a área logada (ver AppRoot).
+ * Com e-mail e senha corretos, o app envia um código e vai para a Verificação; só lá a
+ * sessão é aberta, e a raiz do app troca sozinha para a área logada (ver AppRoot).
  */
 class LoginViewModel(
     private val login: LoginUseCase,
@@ -34,6 +34,10 @@ class LoginViewModel(
         setState { copy(isLoading = true, errors = AuthFormErrors()) }
         viewModelScope.launch {
             login(currentState.email, currentState.password)
+                .onSuccess { email ->
+                    setState { copy(isLoading = false) }
+                    sendEffect(LoginEffect.NavigateToVerification(email))
+                }
                 .onFailure { error -> setState { copy(isLoading = false, errors = error.toFormErrors()) } }
         }
     }

@@ -15,7 +15,7 @@ import kotlin.uuid.Uuid
  * (somem ao fechar o app), mas a sessão é salva de verdade no DataStore.
  *
  * - Conta de demonstração: [DEMO_EMAIL] / [DEMO_PASSWORD] (os dados do protótipo).
- * - O código de verificação é sempre [FAKE_CODE]: não há envio de e-mail.
+ * - O código de verificação (login e cadastro) é sempre [FAKE_CODE]: não há envio de e-mail.
  */
 class FakeAuthRepository(
     private val sessionStorage: SessionStorage,
@@ -28,17 +28,21 @@ class FakeAuthRepository(
     private val accounts = mutableMapOf(
         DEMO_EMAIL to Account(User(id = "demo", name = "Maria Silva", email = DEMO_EMAIL), DEMO_PASSWORD),
     )
-    /** Cadastros aguardando o código de verificação, por e-mail. */
+    /**
+     * Logins e cadastros aguardando o código de verificação, por e-mail. Ao confirmar,
+     * a conta passa a existir (cadastro) ou continua igual (login) e a sessão é aberta.
+     */
     private val pending = mutableMapOf<String, Account>()
 
     override val currentUser: Flow<User?> = sessionStorage.user
 
-    override suspend fun login(email: String, password: String): User {
+    override suspend fun login(email: String, password: String) {
         delay(networkDelayMillis)
-        val account = mutex.withLock { accounts[email] }
-        if (account == null || account.password != password) throw AuthException.InvalidCredentials()
-        startSession(account.user)
-        return account.user
+        mutex.withLock {
+            val account = accounts[email]
+            if (account == null || account.password != password) throw AuthException.InvalidCredentials()
+            pending[email] = account
+        }
     }
 
     override suspend fun register(name: String, email: String, password: String) {

@@ -19,14 +19,20 @@ data object RegisterDestination
 @Serializable
 data class VerificationDestination(val email: String)
 
-/** Fluxo de quem ainda não entrou: Login → Cadastro → Verificação de código. */
+/**
+ * Fluxo de quem ainda não entrou. Tanto o Login quanto o Cadastro terminam na
+ * Verificação de código, que é onde a sessão é aberta.
+ */
 @Composable
 fun AuthNavHost() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = LoginDestination) {
         composable<LoginDestination> {
-            LoginRoute(onNavigateToRegister = { navController.navigate(RegisterDestination) })
+            LoginRoute(
+                onNavigateToRegister = { navController.navigate(RegisterDestination) },
+                onNavigateToVerification = { email -> navController.navigate(VerificationDestination(email)) },
+            )
         }
         composable<RegisterDestination> {
             RegisterRoute(

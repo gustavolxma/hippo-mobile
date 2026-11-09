@@ -42,15 +42,19 @@ class ObserveCurrentUserUseCase(private val repository: AuthRepository) {
     operator fun invoke(): Flow<User?> = repository.currentUser
 }
 
+/** Confere as credenciais e devolve o e-mail normalizado, para onde o código foi enviado. */
 class LoginUseCase(private val repository: AuthRepository) {
-    suspend operator fun invoke(email: String, password: String): Result<User> {
+    suspend operator fun invoke(email: String, password: String): Result<String> {
         val cleanEmail = email.trim().lowercase()
         return validated(
             mapOf(
                 AuthField.EMAIL to validateEmail(cleanEmail),
                 AuthField.PASSWORD to if (password.isEmpty()) "Informe sua senha" else null,
             ),
-        ) { repository.login(cleanEmail, password) }
+        ) {
+            repository.login(cleanEmail, password)
+            cleanEmail
+        }
     }
 }
 
