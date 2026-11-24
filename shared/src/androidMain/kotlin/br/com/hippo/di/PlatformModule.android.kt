@@ -17,8 +17,9 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual val platformModule: Module = module {
-    // 10.0.2.2 é o "localhost" do computador visto de dentro do emulador Android.
-    single { AppConfig(baseUrl = "http://10.0.2.2:8080/api/") }
+    // Para usar a API rodando no computador: AppConfig(baseUrl = "http://10.0.2.2:8080/")
+    // (10.0.2.2 é o "localhost" do computador visto de dentro do emulador Android).
+    single { AppConfig() }
     single<HttpClientEngine> { OkHttp.create() }
     single {
         createDataStore { androidContext().filesDir.resolve(DATA_STORE_FILE_NAME).absolutePath }

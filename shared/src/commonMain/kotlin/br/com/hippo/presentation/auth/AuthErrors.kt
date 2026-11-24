@@ -14,6 +14,9 @@ data class AuthFormErrors(
     fun clear(field: AuthField) = copy(fields = fields - field, general = null)
 }
 
+/** Mensagem para um aviso rápido: o motivo dado pela autenticação ou, em falhas de rede, [default]. */
+internal fun Throwable.authMessageOr(default: String): String = (this as? AuthException)?.message ?: default
+
 /** Converte a falha de um caso de uso no que a tela deve mostrar. */
 internal fun Throwable.toFormErrors(): AuthFormErrors = when (this) {
     is FormValidationException -> AuthFormErrors(fields = errors)

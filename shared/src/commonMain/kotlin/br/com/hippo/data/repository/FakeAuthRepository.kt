@@ -12,7 +12,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.uuid.Uuid
 
 /**
- * Autenticação falsa, usada enquanto a API não está no ar. As contas ficam em memória
+ * Autenticação falsa, para usar o app sem a API (`useFakeBackend`). As contas ficam em memória
  * (somem ao fechar o app), mas a sessão é salva de verdade no DataStore.
  *
  * - Conta de demonstração: [DEMO_EMAIL] / [DEMO_PASSWORD] (os dados do protótipo).

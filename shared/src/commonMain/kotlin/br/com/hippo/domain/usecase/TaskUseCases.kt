@@ -5,7 +5,9 @@ import br.com.hippo.domain.model.TaskPriority
 import br.com.hippo.domain.model.TaskReminder
 import br.com.hippo.domain.reminder.TaskReminderSync
 import br.com.hippo.domain.repository.TaskRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -26,6 +28,29 @@ class ObserveTasksUseCase(private val repository: TaskRepository) {
                 .thenBy(nullsLast()) { it.dueDate }
                 .thenBy(nullsLast()) { it.dueTime }
                 .thenByDescending { it.priority.weight }
+    }
+}
+
+/**
+ * Busca as tarefas mais recentes (que podem ter mudado em outro aparelho) e acerta os
+ * lembretes: agenda os das tarefas novas e cancela os das que foram excluídas.
+ */
+class RefreshTasksUseCase(
+    private val repository: TaskRepository,
+    private val reminders: TaskReminderSync,
+) {
+    suspend operator fun invoke(): Result<Unit> = try {
+        val before = repository.observeTasks().first()
+        repository.refresh()
+        val after = repository.observeTasks().first()
+        val currentIds = after.mapTo(mutableSetOf()) { it.id }
+        before.filter { it.id !in currentIds }.forEach { reminders.cancel(it.id) }
+        after.forEach { reminders.sync(it) }
+        Result.success(Unit)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 }
 
@@ -74,10 +99,7 @@ class SaveTaskUseCase(
         )
         return runCatching {
             if (existing == null) repository.addTask(task) else repository.updateTask(task)
-        }.map {
-            reminders.sync(task)
-            task
-        }
+        }.onSuccess { saved -> reminders.sync(saved) }
     }
 }
 

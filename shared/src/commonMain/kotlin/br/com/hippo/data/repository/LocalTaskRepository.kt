@@ -27,8 +27,7 @@ import kotlinx.datetime.LocalTime
  * Tarefas guardadas no banco SQLite do aparelho (SQLDelight). Cada tarefa pertence ao
  * usuário logado; trocar de conta troca automaticamente a lista observada.
  *
- * Quando a API estiver no ar, o RemoteTaskRepository passa a ser a fonte; este banco
- * pode virar o cache offline dele.
+ * Com a API, este banco é a cópia local do RemoteTaskRepository; sem ela, é a única fonte.
  */
 class LocalTaskRepository(
     database: HippoDatabase,
@@ -58,9 +57,9 @@ class LocalTaskRepository(
         queries.selectById(id, owner).executeAsOneOrNull()?.toDomain()
     }
 
-    override suspend fun addTask(task: Task) = save(task)
+    override suspend fun addTask(task: Task): Task = save(task)
 
-    override suspend fun updateTask(task: Task) = save(task)
+    override suspend fun updateTask(task: Task): Task = save(task)
 
     override suspend fun deleteTask(id: String) = withContext(ioDispatcher) {
         val owner = requireOwner()
@@ -68,12 +67,23 @@ class LocalTaskRepository(
         Unit
     }
 
-    private suspend fun save(task: Task) = withContext(ioDispatcher) {
-        queries.upsert(task.toEntity(requireOwner()))
+    override suspend fun refresh() = Unit
+
+    /** Troca todas as tarefas de [ownerId] pelas recebidas da API. */
+    suspend fun replaceAll(ownerId: String, tasks: List<Task>) = withContext(ioDispatcher) {
+        queries.transaction {
+            queries.deleteByOwner(ownerId)
+            tasks.forEach { queries.upsert(it.toEntity(ownerId)) }
+        }
         Unit
     }
 
-    private suspend fun currentOwner(): String? = currentUser.first()?.id
+    suspend fun currentOwner(): String? = currentUser.first()?.id
+
+    private suspend fun save(task: Task): Task = withContext(ioDispatcher) {
+        queries.upsert(task.toEntity(requireOwner()))
+        task
+    }
 
     private suspend fun requireOwner(): String =
         currentOwner() ?: error("Nenhum usuário logado para salvar a tarefa")

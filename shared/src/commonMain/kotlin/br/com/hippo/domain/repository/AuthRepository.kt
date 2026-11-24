@@ -4,8 +4,7 @@ import br.com.hippo.domain.model.User
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Contrato de autenticação. Hoje existe só a implementação falsa (sem API);
- * quando o backend tiver login, basta criar outra implementação e trocar no Koin.
+ * Contrato de autenticação. A implementação real usa a API; a falsa permite usar o app sem ela.
  */
 interface AuthRepository {
     /** Usuário logado, ou `null` quando não há sessão. */
@@ -40,5 +39,7 @@ sealed class AuthException(message: String) : Exception(message) {
     class EmailAlreadyInUse : AuthException("Já existe uma conta com este e-mail")
     class InvalidCode : AuthException("Código inválido ou expirado")
     class NothingToChange : AuthException("Informe um novo e-mail ou uma nova senha")
+    /** Recusado pela API, com o motivo dela (código errado, muitas tentativas...). */
+    class Rejected(message: String) : AuthException(message)
     class NotSignedIn : AuthException("Sua sessão expirou. Entre novamente.")
 }

@@ -80,7 +80,7 @@ class TaskDetailsViewModel(
                     setState { copy(isSaving = false) }
                     when {
                         error !is TaskValidationException ->
-                            sendEffect(TaskDetailsEffect.ShowMessage("Não foi possível salvar a tarefa"))
+                            sendEffect(TaskDetailsEffect.ShowMessage("Não foi possível salvar a tarefa. Verifique a conexão."))
                         currentState.title.isBlank() -> setState { copy(titleError = error.message) }
                         else -> setState { copy(dateError = error.message) }
                     }
@@ -94,7 +94,7 @@ class TaskDetailsViewModel(
         viewModelScope.launch {
             deleteTask(id)
                 .onSuccess { sendEffect(TaskDetailsEffect.NavigateBack) }
-                .onFailure { sendEffect(TaskDetailsEffect.ShowMessage("Não foi possível excluir a tarefa")) }
+                .onFailure { sendEffect(TaskDetailsEffect.ShowMessage("Não foi possível excluir a tarefa. Verifique a conexão.")) }
         }
     }
 }

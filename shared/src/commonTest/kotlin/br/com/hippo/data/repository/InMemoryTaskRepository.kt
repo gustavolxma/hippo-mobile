@@ -16,12 +16,23 @@ class InMemoryTaskRepository(initialTasks: List<Task> = emptyList()) : TaskRepos
 
     override suspend fun getTask(id: String): Task? = tasks.value.firstOrNull { it.id == id }
 
-    override suspend fun addTask(task: Task) {
+    override suspend fun addTask(task: Task): Task {
         tasks.update { it + task }
+        return task
     }
 
-    override suspend fun updateTask(task: Task) {
+    override suspend fun updateTask(task: Task): Task {
         tasks.update { list -> list.map { if (it.id == task.id) task else it } }
+        return task
+    }
+
+    /** Tarefas que estariam no servidor; `null` quando não há nada novo. */
+    var remoteTasks: List<Task>? = null
+    var failRefreshWith: Exception? = null
+
+    override suspend fun refresh() {
+        failRefreshWith?.let { throw it }
+        remoteTasks?.let { tasks.value = it }
     }
 
     override suspend fun deleteTask(id: String) {
