@@ -23,6 +23,7 @@ import br.com.hippo.domain.usecase.CancelAllRemindersUseCase
 import br.com.hippo.domain.usecase.DeleteTaskUseCase
 import br.com.hippo.domain.usecase.GetTaskUseCase
 import br.com.hippo.domain.usecase.InterpretVoiceCommandUseCase
+import br.com.hippo.domain.usecase.IsReminderInPastUseCase
 import br.com.hippo.domain.usecase.LoginUseCase
 import br.com.hippo.domain.usecase.LogoutUseCase
 import br.com.hippo.domain.usecase.ObserveCurrentUserUseCase
@@ -129,6 +130,7 @@ val domainModule = module {
 
     factory { InterpretVoiceCommandUseCase(get(), get(), fallback = get<LocalCommandInterpreter>()) }
 
+    factoryOf(::IsReminderInPastUseCase)
     factoryOf(::ResyncRemindersUseCase)
     factoryOf(::CancelAllRemindersUseCase)
 }
@@ -140,7 +142,7 @@ val presentationModule = module {
     viewModel { params -> VerificationViewModel(params.get(), demoCode(), get(), get()) }
     viewModelOf(::HomeViewModel)
     viewModel { params ->
-        TaskDetailsViewModel(params.getOrNull<String>(), params.getOrNull<TaskInput>(), get(), get(), get())
+        TaskDetailsViewModel(params.getOrNull<String>(), params.getOrNull<TaskInput>(), get(), get(), get(), get())
     }
     viewModelOf(::VoiceViewModel)
     viewModelOf(::VoiceMetricsViewModel)

@@ -22,9 +22,6 @@ class InterpretVoiceCommandUseCase(
     private val clock: Clock,
     private val fallback: CommandInterpreter? = null,
 ) {
-    /** Interpretador principal, registrado quando nem chegou a haver o que interpretar. */
-    val interpreterName: String get() = interpreter.name
-
     suspend operator fun invoke(text: String): Interpretation {
         val now = clock.now().toLocalDateTime(TimeZone.currentSystemDefault())
         if (fallback == null) return Interpretation(interpreter.interpret(text, now), interpreter.name)

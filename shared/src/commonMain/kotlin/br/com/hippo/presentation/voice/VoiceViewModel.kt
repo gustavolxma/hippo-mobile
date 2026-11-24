@@ -6,6 +6,7 @@ import br.com.hippo.domain.metrics.VoiceInteraction
 import br.com.hippo.domain.metrics.VoiceMetricsRepository
 import br.com.hippo.domain.metrics.VoiceOutcome
 import br.com.hippo.domain.usecase.InterpretVoiceCommandUseCase
+import br.com.hippo.domain.usecase.IsReminderInPastUseCase
 import br.com.hippo.domain.usecase.SaveTaskUseCase
 import br.com.hippo.domain.usecase.TaskInput
 import br.com.hippo.domain.voice.SpeechError
@@ -33,6 +34,7 @@ class VoiceViewModel(
     private val recognizer: VoiceRecognizer,
     private val interpretCommand: InterpretVoiceCommandUseCase,
     private val saveTask: SaveTaskUseCase,
+    private val isReminderInPast: IsReminderInPastUseCase,
     private val metrics: VoiceMetricsRepository,
     private val clock: Clock,
 ) : MviViewModel<VoiceState, VoiceIntent, VoiceEffect>(VoiceState()) {
@@ -135,7 +137,13 @@ class VoiceViewModel(
                 .onSuccess {
                     resolvePending(VoiceOutcome.CONFIRMED)
                     setState { VoiceState() }
-                    sendEffect(VoiceEffect.ShowMessage("Tarefa criada: ${it.title}"))
+                    val created = "Tarefa criada: ${it.title}"
+                    val message = if (isReminderInPast(it.reminder, it.dueDate, it.dueTime)) {
+                        "$created. O lembrete não vai tocar, porque o horário já passou."
+                    } else {
+                        created
+                    }
+                    sendEffect(VoiceEffect.ShowMessage(message))
                 }
                 .onFailure {
                     setState { copy(isSaving = false) }
@@ -150,7 +158,7 @@ class VoiceViewModel(
         outcome: VoiceOutcome,
         recognitionMs: Long?,
         interpretationMs: Long?,
-        interpreter: String = interpretCommand.interpreterName,
+        interpreter: String = "",
     ): Long? = ignoringFailures {
         metrics.record(
             VoiceInteraction(

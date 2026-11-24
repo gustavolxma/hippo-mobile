@@ -24,6 +24,7 @@ data class VoiceInteraction(
     val id: Long = 0,
     val createdAt: Instant,
     /** "local" (regras no aparelho) ou, quando houver API, "ia". */
+    /** "ia" ou "local"; vazio quando a fala não foi reconhecida e não houve o que interpretar. */
     val interpreter: String,
     val transcript: String,
     val result: TaskInput?,
