@@ -32,3 +32,6 @@ INSERT OR REPLACE INTO TaskEntity VALUES ?;
 
 deleteById:
 DELETE FROM TaskEntity WHERE id = ? AND owner_id = ?;
+
+deleteByOwner:
+DELETE FROM TaskEntity WHERE owner_id = ?;

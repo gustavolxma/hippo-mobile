@@ -3,8 +3,10 @@ package br.com.hippo.presentation.home
 import androidx.lifecycle.viewModelScope
 import br.com.hippo.core.mvi.MviViewModel
 import br.com.hippo.domain.usecase.ObserveTasksUseCase
+import br.com.hippo.domain.usecase.RefreshTasksUseCase
 import br.com.hippo.domain.usecase.ToggleTaskDoneUseCase
 import br.com.hippo.domain.usecase.groupTasksByDay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -15,9 +17,13 @@ import kotlin.time.Clock
 
 class HomeViewModel(
     observeTasks: ObserveTasksUseCase,
+    private val refreshTasks: RefreshTasksUseCase,
     private val toggleTaskDone: ToggleTaskDoneUseCase,
     private val clock: Clock,
 ) : MviViewModel<HomeState, HomeIntent, HomeEffect>(HomeState()) {
+
+    private var refreshing: Job? = null
+    private var firstRefreshDone = false
 
     init {
         observeTasks()
@@ -25,7 +31,8 @@ class HomeViewModel(
                 val now = clock.now().toLocalDateTime(TimeZone.currentSystemDefault())
                 setState {
                     copy(
-                        isLoading = false,
+                        // Na primeira vez no aparelho a lista local é vazia: espera a API antes de dizer isso.
+                        isLoading = tasks.isEmpty() && !firstRefreshDone,
                         greeting = greetingFor(now.hour),
                         groups = groupTasksByDay(tasks, today = now.date),
                     )
@@ -40,13 +47,27 @@ class HomeViewModel(
 
     override fun onIntent(intent: HomeIntent) {
         when (intent) {
+            HomeIntent.Refresh -> refresh()
+
             is HomeIntent.ToggleDone -> viewModelScope.launch {
                 toggleTaskDone(intent.task).onFailure {
-                    sendEffect(HomeEffect.ShowMessage("Não foi possível atualizar a tarefa"))
+                    sendEffect(HomeEffect.ShowMessage("Não foi possível atualizar a tarefa. Verifique a conexão."))
                 }
             }
 
             is HomeIntent.OpenTask -> sendEffect(HomeEffect.NavigateToDetails(intent.task.id))
+        }
+    }
+
+    private fun refresh() {
+        if (refreshing?.isActive == true) return
+        refreshing = viewModelScope.launch {
+            val result = refreshTasks()
+            firstRefreshDone = true
+            setState { copy(isLoading = false) }
+            result.onFailure {
+                sendEffect(HomeEffect.ShowMessage("Sem conexão com o servidor. Mostrando as tarefas salvas no aparelho."))
+            }
         }
     }
 }

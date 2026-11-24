@@ -33,7 +33,7 @@ class SettingsViewModel(
             SettingsIntent.SmartNotifications ->
                 sendEffect(SettingsEffect.ShowMessage("As notificações inteligentes chegam em uma próxima etapa"))
             SettingsIntent.Privacy ->
-                sendEffect(SettingsEffect.ShowMessage("Privacidade e dados chega junto com a API"))
+                sendEffect(SettingsEffect.ShowMessage("Privacidade e dados chega em uma próxima etapa"))
             // Ao limpar a sessão, a raiz do app volta sozinha para o Login.
             SettingsIntent.Logout -> viewModelScope.launch { logout() }
         }

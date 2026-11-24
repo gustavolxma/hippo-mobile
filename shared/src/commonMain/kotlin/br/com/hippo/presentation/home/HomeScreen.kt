@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.hippo.domain.usecase.TaskSection
 import br.com.hippo.presentation.components.SectionTitle
@@ -39,6 +40,11 @@ fun HomeRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LifecycleStartEffect(viewModel) {
+        viewModel.onIntent(HomeIntent.Refresh)
+        onStopOrDispose { }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->

@@ -5,10 +5,14 @@ import br.com.hippo.data.local.DataStorePreferencesRepository
 import br.com.hippo.data.local.SessionStorage
 import br.com.hippo.data.local.db.HippoDatabase
 import br.com.hippo.data.metrics.LocalVoiceMetricsRepository
+import br.com.hippo.data.remote.AiApi
+import br.com.hippo.data.remote.AuthApi
 import br.com.hippo.data.remote.TaskApi
 import br.com.hippo.data.repository.FakeAuthRepository
 import br.com.hippo.data.repository.LocalTaskRepository
+import br.com.hippo.data.repository.RemoteAuthRepository
 import br.com.hippo.data.repository.RemoteTaskRepository
+import br.com.hippo.data.voice.AiCommandInterpreter
 import br.com.hippo.data.voice.LocalCommandInterpreter
 import br.com.hippo.domain.reminder.TaskReminderSync
 import br.com.hippo.domain.metrics.VoiceMetricsRepository
@@ -24,6 +28,7 @@ import br.com.hippo.domain.usecase.LogoutUseCase
 import br.com.hippo.domain.usecase.ObserveCurrentUserUseCase
 import br.com.hippo.domain.usecase.ObserveThemeModeUseCase
 import br.com.hippo.domain.usecase.ObserveTasksUseCase
+import br.com.hippo.domain.usecase.RefreshTasksUseCase
 import br.com.hippo.domain.usecase.RegisterUseCase
 import br.com.hippo.domain.usecase.RequestAccountChangeCodeUseCase
 import br.com.hippo.domain.usecase.ResendCodeUseCase
@@ -56,11 +61,14 @@ import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 import kotlin.time.Clock
 
+/** API publicada (repositório hippo-api). A barra no final é necessária. */
+const val PRODUCTION_API_URL = "https://hippo-api-yj6z.onrender.com/"
+
 /** Configurações que variam por plataforma/ambiente. */
 data class AppConfig(
-    val baseUrl: String,
-    /** Enquanto o backend não existir, mantenha `true` para usar dados em memória. */
-    val useFakeBackend: Boolean = true,
+    val baseUrl: String = PRODUCTION_API_URL,
+    /** `true` usa o app sem a API: login de demonstração, tarefas só no aparelho e voz por regras. */
+    val useFakeBackend: Boolean = false,
 )
 
 /** Cada plataforma fornece: AppConfig, HttpClientEngine e DataStore. */
@@ -72,21 +80,22 @@ val dataModule = module {
     single { HippoDatabase(get()) }
     singleOf(::SessionStorage)
     single { createHttpClient(engine = get(), baseUrl = get<AppConfig>().baseUrl, sessionStorage = get()) }
+    singleOf(::AuthApi)
     singleOf(::TaskApi)
+    singleOf(::AiApi)
+    single { LocalTaskRepository(database = get(), currentUser = get<SessionStorage>().user) }
     single<TaskRepository> {
-        if (get<AppConfig>().useFakeBackend) {
-            LocalTaskRepository(database = get(), currentUser = get<SessionStorage>().user)
-        } else {
-            RemoteTaskRepository(get())
-        }
+        if (get<AppConfig>().useFakeBackend) get<LocalTaskRepository>() else RemoteTaskRepository(get(), get())
     }
-    // Ainda não existe login na API: quando existir, crie um RemoteAuthRepository e
-    // escolha entre ele e o falso aqui, como no TaskRepository acima.
-    single<AuthRepository> { FakeAuthRepository(get()) }
+    single<AuthRepository> {
+        if (get<AppConfig>().useFakeBackend) FakeAuthRepository(get()) else RemoteAuthRepository(get(), get())
+    }
     single<PreferencesRepository> { DataStorePreferencesRepository(get()) }
-    // Interpretação local por regras. Quando a API tiver a IA, troque por uma
-    // implementação que envia o texto ao backend (a tela de Voz não muda).
-    single<CommandInterpreter> { LocalCommandInterpreter() }
+    singleOf(::LocalCommandInterpreter)
+    // Com a API, quem interpreta é a IA; as regras locais ficam de reserva (ver InterpretVoiceCommandUseCase).
+    single<CommandInterpreter> {
+        if (get<AppConfig>().useFakeBackend) get<LocalCommandInterpreter>() else AiCommandInterpreter(get())
+    }
     single<VoiceMetricsRepository> {
         LocalVoiceMetricsRepository(database = get(), currentUser = get<SessionStorage>().user)
     }
@@ -100,6 +109,7 @@ private fun Scope.demoCode(): String? =
 
 val domainModule = module {
     factoryOf(::ObserveTasksUseCase)
+    factoryOf(::RefreshTasksUseCase)
     factoryOf(::GetTaskUseCase)
     factoryOf(::SaveTaskUseCase)
     factoryOf(::ToggleTaskDoneUseCase)
@@ -117,7 +127,7 @@ val domainModule = module {
     factoryOf(::ObserveThemeModeUseCase)
     factoryOf(::SetThemeModeUseCase)
 
-    factoryOf(::InterpretVoiceCommandUseCase)
+    factory { InterpretVoiceCommandUseCase(get(), get(), fallback = get<LocalCommandInterpreter>()) }
 
     factoryOf(::ResyncRemindersUseCase)
     factoryOf(::CancelAllRemindersUseCase)

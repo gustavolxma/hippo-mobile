@@ -7,6 +7,7 @@ import br.com.hippo.domain.usecase.ObserveCurrentUserUseCase
 import br.com.hippo.domain.usecase.RequestAccountChangeCodeUseCase
 import br.com.hippo.domain.usecase.UpdateAccountUseCase
 import br.com.hippo.presentation.auth.AuthFormErrors
+import br.com.hippo.presentation.auth.authMessageOr
 import br.com.hippo.presentation.auth.launchCountdown
 import br.com.hippo.presentation.auth.toFormErrors
 import kotlinx.coroutines.Job
@@ -54,10 +55,10 @@ class ChangeAccountViewModel(
         countdown = viewModelScope.launchCountdown { left -> setState { copy(resendSecondsLeft = left) } }
         requestCode()
             .onSuccess { if (isResend) sendEffect(ChangeAccountEffect.ShowMessage("Enviamos um novo código")) }
-            .onFailure {
+            .onFailure { error ->
                 countdown?.cancel()
                 setState { copy(resendSecondsLeft = 0) }
-                sendEffect(ChangeAccountEffect.ShowMessage("Não foi possível enviar o código"))
+                sendEffect(ChangeAccountEffect.ShowMessage(error.authMessageOr("Não foi possível enviar o código")))
             }
     }
 

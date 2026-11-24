@@ -57,6 +57,7 @@ data object SettingsDestination
 data class TaskDetailsDestination(
     val taskId: String? = null,
     val draftTitle: String? = null,
+    val draftDescription: String? = null,
     val draftPriority: String? = null,
     val draftDate: String? = null,
     val draftTime: String? = null,
@@ -65,6 +66,7 @@ data class TaskDetailsDestination(
     fun draft(): TaskInput? = draftTitle?.let { title ->
         TaskInput(
             title = title,
+            description = draftDescription.orEmpty(),
             priority = TaskPriority.entries.firstOrNull { it.name == draftPriority } ?: TaskPriority.MEDIUM,
             dueDate = draftDate?.let(LocalDate::parse),
             dueTime = draftTime?.let(LocalTime::parse),
@@ -75,6 +77,7 @@ data class TaskDetailsDestination(
     companion object {
         fun fromDraft(draft: TaskInput?) = TaskDetailsDestination(
             draftTitle = draft?.title,
+            draftDescription = draft?.description,
             draftPriority = draft?.priority?.name,
             draftDate = draft?.dueDate?.toString(),
             draftTime = draft?.dueTime?.toString(),

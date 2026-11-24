@@ -7,6 +7,7 @@ import br.com.hippo.domain.usecase.ResendCodeUseCase
 import br.com.hippo.domain.usecase.VERIFICATION_CODE_LENGTH
 import br.com.hippo.domain.usecase.VerifyCodeUseCase
 import br.com.hippo.presentation.auth.AuthFormErrors
+import br.com.hippo.presentation.auth.authMessageOr
 import br.com.hippo.presentation.auth.launchCountdown
 import br.com.hippo.presentation.auth.toFormErrors
 import kotlinx.coroutines.Job
@@ -59,10 +60,10 @@ class VerificationViewModel(
         viewModelScope.launch {
             resendCode(currentState.email)
                 .onSuccess { sendEffect(VerificationEffect.ShowMessage("Enviamos um novo código")) }
-                .onFailure {
+                .onFailure { error ->
                     countdown?.cancel()
                     setState { copy(resendSecondsLeft = 0) }
-                    sendEffect(VerificationEffect.ShowMessage("Não foi possível reenviar o código"))
+                    sendEffect(VerificationEffect.ShowMessage(error.authMessageOr("Não foi possível reenviar o código")))
                 }
         }
     }

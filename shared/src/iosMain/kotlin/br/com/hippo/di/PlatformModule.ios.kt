@@ -25,8 +25,8 @@ import platform.Foundation.NSUserDomainMask
  * então quase nunca é preciso escrever Swift.
  */
 actual val platformModule: Module = module {
-    // No simulador iOS, localhost aponta para o próprio Mac.
-    single { AppConfig(baseUrl = "http://localhost:8080/api/") }
+    // Para usar a API rodando no Mac pelo simulador: AppConfig(baseUrl = "http://localhost:8080/")
+    single { AppConfig() }
     single<HttpClientEngine> { Darwin.create() }
     single { createDataStore { documentDirectory() + "/$DATA_STORE_FILE_NAME" } }
     single<SqlDriver> { NativeSqliteDriver(HippoDatabase.Schema, DATABASE_FILE_NAME) }

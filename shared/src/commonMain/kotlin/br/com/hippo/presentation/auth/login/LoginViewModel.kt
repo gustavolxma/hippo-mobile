@@ -24,7 +24,7 @@ class LoginViewModel(
                 setState { copy(password = intent.value, errors = errors.clear(AuthField.PASSWORD)) }
             LoginIntent.Submit -> submit()
             LoginIntent.ForgotPassword ->
-                sendEffect(LoginEffect.ShowMessage("Recuperação de senha chega junto com a API"))
+                sendEffect(LoginEffect.ShowMessage("A recuperação de senha chega em uma próxima etapa"))
             LoginIntent.CreateAccount -> sendEffect(LoginEffect.NavigateToRegister)
         }
     }

@@ -15,12 +15,11 @@ sealed interface VoiceCommand {
 /**
  * Transforma o texto transcrito em um comando (Processamento de Linguagem Natural).
  *
- * Hoje a implementação é local, baseada em regras ([br.com.hippo.data.voice.LocalCommandInterpreter]).
- * Quando a API tiver a integração com IA (Gemini/OpenAI), basta criar outra implementação
- * que envia o texto ao backend — a tela de Voz não muda.
+ * Há duas implementações: com IA, pela API ([br.com.hippo.data.voice.AiCommandInterpreter]), e local,
+ * baseada em regras ([br.com.hippo.data.voice.LocalCommandInterpreter]), usada quando a IA falha.
  */
 interface CommandInterpreter {
-    /** Identifica a implementação nas métricas: "local" ou, com a API, "ia". */
+    /** Identifica a implementação nas métricas: "ia" ou "local". */
     val name: String
 
     /** [now] permite resolver "hoje", "amanhã", "às 15h" em relação ao momento da fala. */

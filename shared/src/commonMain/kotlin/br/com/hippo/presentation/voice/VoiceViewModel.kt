@@ -111,16 +111,16 @@ class VoiceViewModel(
         }
         setState { copy(phase = VoicePhase.PROCESSING) }
         val interpretationStart = TimeSource.Monotonic.markNow()
-        val command = interpretCommand(text)
+        val (command, interpreter) = interpretCommand(text)
         val interpretationMs = interpretationStart.elapsedNow().inWholeMilliseconds
 
         when (command) {
             is VoiceCommand.CreateTask -> {
-                pendingInteractionId = record(text, command.input, VoiceOutcome.PENDING, recognitionMs, interpretationMs)
+                pendingInteractionId = record(text, command.input, VoiceOutcome.PENDING, recognitionMs, interpretationMs, interpreter)
                 setState { copy(phase = VoicePhase.UNDERSTOOD, task = command.input) }
             }
             VoiceCommand.NotUnderstood -> {
-                record(text, null, VoiceOutcome.NOT_UNDERSTOOD, recognitionMs, interpretationMs)
+                record(text, null, VoiceOutcome.NOT_UNDERSTOOD, recognitionMs, interpretationMs, interpreter)
                 setState { copy(phase = VoicePhase.NOT_UNDERSTOOD) }
             }
         }
@@ -139,7 +139,7 @@ class VoiceViewModel(
                 }
                 .onFailure {
                     setState { copy(isSaving = false) }
-                    sendEffect(VoiceEffect.ShowMessage("Não foi possível criar a tarefa"))
+                    sendEffect(VoiceEffect.ShowMessage("Não foi possível criar a tarefa. Verifique a conexão."))
                 }
         }
     }
@@ -150,11 +150,12 @@ class VoiceViewModel(
         outcome: VoiceOutcome,
         recognitionMs: Long?,
         interpretationMs: Long?,
+        interpreter: String = interpretCommand.interpreterName,
     ): Long? = ignoringFailures {
         metrics.record(
             VoiceInteraction(
                 createdAt = clock.now(),
-                interpreter = interpretCommand.interpreterName,
+                interpreter = interpreter,
                 transcript = transcript,
                 result = result,
                 outcome = outcome,

@@ -88,7 +88,6 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
 
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.auth)
             implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.serialization.kotlinxJson)
@@ -108,6 +107,7 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
     }
 }
