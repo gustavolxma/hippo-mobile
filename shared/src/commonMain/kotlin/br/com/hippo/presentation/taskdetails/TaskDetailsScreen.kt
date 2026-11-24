@@ -169,6 +169,13 @@ fun TaskDetailsScreen(state: TaskDetailsState, onIntent: (TaskDetailsIntent) -> 
                     enabled = state.dueTime != null,
                     onSelect = { onIntent(TaskDetailsIntent.ReminderChanged(it)) },
                 )
+                if (state.isReminderInPast) {
+                    Text(
+                        "O horário deste lembrete já passou: ele não vai tocar.",
+                        style = HippoTheme.type.caption,
+                        color = HippoColors.Danger,
+                    )
+                }
             }
         }
 

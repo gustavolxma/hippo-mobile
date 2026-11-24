@@ -5,6 +5,7 @@ import br.com.hippo.core.mvi.MviViewModel
 import br.com.hippo.domain.model.Task
 import br.com.hippo.domain.usecase.DeleteTaskUseCase
 import br.com.hippo.domain.usecase.GetTaskUseCase
+import br.com.hippo.domain.usecase.IsReminderInPastUseCase
 import br.com.hippo.domain.usecase.SaveTaskUseCase
 import br.com.hippo.domain.usecase.TaskInput
 import br.com.hippo.domain.usecase.TaskValidationException
@@ -20,6 +21,7 @@ class TaskDetailsViewModel(
     private val getTask: GetTaskUseCase,
     private val saveTask: SaveTaskUseCase,
     private val deleteTask: DeleteTaskUseCase,
+    private val reminderInPast: IsReminderInPastUseCase,
 ) : MviViewModel<TaskDetailsState, TaskDetailsIntent, TaskDetailsEffect>(
     TaskDetailsState(isNew = taskId == null, isLoading = taskId != null).withDraft(draft),
 ) {
@@ -27,7 +29,7 @@ class TaskDetailsViewModel(
     private var original: Task? = null
 
     init {
-        if (taskId != null) load(taskId)
+        if (taskId != null) load(taskId) else checkReminder()
     }
 
     private fun load(id: String) = viewModelScope.launch {
@@ -49,6 +51,7 @@ class TaskDetailsViewModel(
                 reminder = task.reminder,
             )
         }
+        // Em tarefa já concluída ou antiga, o aviso só aparece se o usuário mexer no horário ou no lembrete.
     }
 
     override fun onIntent(intent: TaskDetailsIntent) {
@@ -56,15 +59,28 @@ class TaskDetailsViewModel(
             is TaskDetailsIntent.TitleChanged -> setState { copy(title = intent.value, titleError = null) }
             is TaskDetailsIntent.DescriptionChanged -> setState { copy(description = intent.value) }
             is TaskDetailsIntent.PriorityChanged -> setState { copy(priority = intent.value) }
-            is TaskDetailsIntent.DateChanged -> setState { copy(dueDate = intent.value, dateError = null) }
-            is TaskDetailsIntent.TimeChanged -> setState { copy(dueTime = intent.value, dateError = null) }
-            is TaskDetailsIntent.ReminderChanged -> setState { copy(reminder = intent.value) }
+            is TaskDetailsIntent.DateChanged -> {
+                setState { copy(dueDate = intent.value, dateError = null) }
+                checkReminder()
+            }
+            is TaskDetailsIntent.TimeChanged -> {
+                setState { copy(dueTime = intent.value, dateError = null) }
+                checkReminder()
+            }
+            is TaskDetailsIntent.ReminderChanged -> {
+                setState { copy(reminder = intent.value) }
+                checkReminder()
+            }
             TaskDetailsIntent.Save -> save()
             TaskDetailsIntent.DeleteClicked -> setState { copy(showDeleteDialog = true) }
             TaskDetailsIntent.DeleteDismissed -> setState { copy(showDeleteDialog = false) }
             TaskDetailsIntent.DeleteConfirmed -> delete()
             TaskDetailsIntent.Back -> sendEffect(TaskDetailsEffect.NavigateBack)
         }
+    }
+
+    private fun checkReminder() = setState {
+        copy(isReminderInPast = reminderInPast(reminder, dueDate, dueTime))
     }
 
     private fun save() {

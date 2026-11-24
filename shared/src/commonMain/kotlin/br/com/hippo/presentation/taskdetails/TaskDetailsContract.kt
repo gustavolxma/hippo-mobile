@@ -15,6 +15,8 @@ data class TaskDetailsState(
     val dueDate: LocalDate? = null,
     val dueTime: LocalTime? = null,
     val reminder: TaskReminder = TaskReminder.NONE,
+    /** O lembrete escolhido não vai tocar, porque o momento dele já passou. */
+    val isReminderInPast: Boolean = false,
     val isSaving: Boolean = false,
     val showDeleteDialog: Boolean = false,
     val titleError: String? = null,

@@ -3,7 +3,9 @@ package br.com.hippo.domain.reminder
 import br.com.hippo.domain.model.Task
 import br.com.hippo.domain.model.TaskReminder
 import kotlinx.coroutines.CancellationException
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
@@ -28,18 +30,22 @@ interface ReminderScheduler {
     suspend fun cancel(taskId: String)
 }
 
+/** Momento em que o lembrete toca, ou `null` se a tarefa não tem lembrete ou horário. */
+private fun reminderTime(reminder: TaskReminder, date: LocalDate?, time: LocalTime?, timeZone: TimeZone): LocalDateTime? {
+    val minutesBefore = reminder.minutesBefore ?: return null
+    if (date == null || time == null) return null
+    val dueAt = date.atTime(time).toInstant(timeZone)
+    return (dueAt - minutesBefore.minutes).toLocalDateTime(timeZone)
+}
+
 /**
  * Calcula o lembrete de uma tarefa, ou `null` se não houver o que agendar
  * (sem lembrete, sem horário, já concluída ou com o momento já passado).
  */
 fun reminderFor(task: Task, now: LocalDateTime, timeZone: TimeZone): ScheduledReminder? {
-    val minutesBefore = task.reminder.minutesBefore ?: return null
-    val date = task.dueDate ?: return null
-    val time = task.dueTime ?: return null
     if (task.isDone) return null
-
-    val dueAt = date.atTime(time).toInstant(timeZone)
-    val triggerAt = (dueAt - minutesBefore.minutes).toLocalDateTime(timeZone)
+    val time = task.dueTime ?: return null
+    val triggerAt = reminderTime(task.reminder, task.dueDate, time, timeZone) ?: return null
     if (triggerAt <= now) return null
 
     return ScheduledReminder(
@@ -73,6 +79,13 @@ class TaskReminderSync(
         val zone = timeZone()
         val reminder = reminderFor(task, clock.now().toLocalDateTime(zone), zone)
         if (reminder != null) scheduler.schedule(reminder) else scheduler.cancel(task.id)
+    }
+
+    /** Se o momento do lembrete já passou: ele não seria agendado, e o usuário precisa saber. */
+    fun isInPast(reminder: TaskReminder, date: LocalDate?, time: LocalTime?): Boolean {
+        val zone = timeZone()
+        val triggerAt = reminderTime(reminder, date, time, zone) ?: return false
+        return triggerAt <= clock.now().toLocalDateTime(zone)
     }
 
     suspend fun cancel(taskId: String) = ignoringFailures { scheduler.cancel(taskId) }

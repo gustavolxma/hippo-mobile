@@ -14,7 +14,9 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -80,6 +82,19 @@ class RemindersTest {
         assertNull(reminderFor(task(time = null), now, TimeZone.UTC))
         assertNull(reminderFor(task(isDone = true), now, TimeZone.UTC))
         assertNull(reminderFor(task(time = LocalTime(9, 10)), now, TimeZone.UTC))
+    }
+
+    @Test
+    fun `reconhece o lembrete cujo momento ja passou`() {
+        val sync = testReminderSync() // agora são 9h
+        fun inPast(reminder: TaskReminder, time: LocalTime?, date: LocalDate? = today) = sync.isInPast(reminder, date, time)
+
+        assertTrue(inPast(TaskReminder.AT_TIME, LocalTime(8, 59)))
+        assertTrue(inPast(TaskReminder.MINUTES_30, LocalTime(9, 10))) // a tarefa é futura, mas o aviso não
+        assertFalse(inPast(TaskReminder.AT_TIME, LocalTime(9, 10)))
+        assertFalse(inPast(TaskReminder.NONE, LocalTime(8, 0)))
+        assertFalse(inPast(TaskReminder.AT_TIME, time = null))
+        assertFalse(inPast(TaskReminder.AT_TIME, LocalTime(8, 0), date = null))
     }
 
     @Test

@@ -8,6 +8,7 @@ import br.com.hippo.domain.metrics.VoiceOutcome
 import br.com.hippo.domain.model.TaskPriority
 import br.com.hippo.domain.reminder.testReminderSync
 import br.com.hippo.domain.usecase.InterpretVoiceCommandUseCase
+import br.com.hippo.domain.usecase.IsReminderInPastUseCase
 import br.com.hippo.domain.usecase.SaveTaskUseCase
 import br.com.hippo.domain.voice.SpeechError
 import br.com.hippo.domain.voice.SpeechEvent
@@ -80,6 +81,7 @@ class VoiceViewModelTest {
         recognizer = recognizer,
         interpretCommand = InterpretVoiceCommandUseCase(LocalCommandInterpreter(), fixedClock),
         saveTask = SaveTaskUseCase(repository, testReminderSync()),
+        isReminderInPast = IsReminderInPastUseCase(testReminderSync()),
         metrics = metrics,
         clock = fixedClock,
     )
@@ -109,6 +111,20 @@ class VoiceViewModelTest {
         assertEquals(VoicePhase.IDLE, vm.state.value.phase)
         assertEquals(listOf(VoiceOutcome.CONFIRMED), outcomes())
         assertEquals("local", metrics.items.single().interpreter)
+    }
+
+    @Test
+    fun `avisa quando o lembrete da tarefa criada ja passou`() = runTest {
+        // O relógio dos lembretes nos testes está em 09/11/2026 9h (UTC); a fala pede as 8h do mesmo dia.
+        val vm = viewModel(FakeVoiceRecognizer(listOf(SpeechEvent.Final("Me lembra de ligar dia 9/11 às 8h"))))
+        vm.onIntent(VoiceIntent.PermissionResult(granted = true))
+
+        vm.onIntent(VoiceIntent.Confirm)
+
+        assertEquals(
+            VoiceEffect.ShowMessage("Tarefa criada: Ligar. O lembrete não vai tocar, porque o horário já passou."),
+            vm.effects.first(),
+        )
     }
 
     @Test
@@ -151,6 +167,8 @@ class VoiceViewModelTest {
         vm.onIntent(VoiceIntent.PermissionResult(granted = true))
         assertEquals(VoicePhase.ERROR, vm.state.value.phase)
         assertEquals(listOf(VoiceOutcome.RECOGNITION_FAILED), outcomes())
+        // Nada foi interpretado: não pode contar como "ia" nem como "local".
+        assertEquals("", metrics.items.single().interpreter)
 
         vm.onIntent(VoiceIntent.PermissionResult(granted = false))
         assertEquals(VoicePhase.ERROR, vm.state.value.phase)
